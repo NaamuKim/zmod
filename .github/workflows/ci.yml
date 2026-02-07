@@ -15,7 +15,7 @@ jobs:
       - name: Build NAPI binding
         run: |
           cd packages/zmod
-          ./node_modules/.bin/napi build --platform --release --cargo-cwd ../../crates/zmod-napi
+          ./node_modules/.bin/napi build --platform --release --manifest-path ../../crates/zmod-napi/Cargo.toml
       - name: Build TypeScript
         run: pnpm --filter zmod build
       - run: pnpm test

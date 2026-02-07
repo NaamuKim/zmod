@@ -3,7 +3,7 @@ use napi_derive::napi;
 use swc_core::common::{sync::Lrc, SourceMap, FileName};
 use swc_core::ecma::ast::*;
 use swc_core::ecma::codegen::{text_writer::JsWriter, Emitter};
-use swc_core::ecma::parser::{Parser, StringInput, Syntax, TsConfig};
+use swc_core::ecma::parser::{Parser, StringInput, Syntax, TsSyntax};
 use swc_core::ecma::visit::{VisitMut, VisitMutWith};
 
 #[napi(object)]
@@ -38,9 +38,9 @@ impl VisitMut for RenameVisitor {
 #[napi]
 pub fn transform_code(code: String, options: TransformOptions) -> Result<TransformResult> {
     let cm: Lrc<SourceMap> = Default::default();
-    let fm = cm.new_source_file(FileName::Anon, code);
+    let fm = cm.new_source_file(FileName::Anon.into(), code);
 
-    let syntax = Syntax::Typescript(TsConfig {
+    let syntax = Syntax::Typescript(TsSyntax {
         tsx: true,
         decorators: true,
         ..Default::default()

@@ -26,8 +26,8 @@
     "artifacts": "napi artifacts"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^2.16.0",
-    "@types/node": "^20.10.0",
+    "@napi-rs/cli": "^3.5.1",
+    "@types/node": "^25.2.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },

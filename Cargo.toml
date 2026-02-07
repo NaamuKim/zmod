@@ -11,7 +11,7 @@ repository = "https://github.com/yourusername/zmod"
 
 [workspace.dependencies]
 # SWC
-swc_core = { version = "0.95", features = [
+swc_core = { version = "56.0", features = [
   "common",
   "ecma_ast",
   "ecma_parser",
@@ -20,11 +20,11 @@ swc_core = { version = "0.95", features = [
   "ecma_codegen",
 ] }
 
-# Serde (pin below 1.0.228 for swc_common compatibility)
-serde = { version = ">=1.0, <1.0.219", features = ["derive"] }
+# Serde
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # NAPI
-napi = "2.16"
-napi-derive = "2.16"
-napi-build = "2.1"
+napi = "3.8"
+napi-derive = "3.5"
+napi-build = "2.3"
