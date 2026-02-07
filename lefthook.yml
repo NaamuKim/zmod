@@ -1,0 +1,4 @@
+pre-commit:
+  jobs:
+    - name: fmt check
+      run: pnpm fmt --check
