@@ -1,0 +1,21 @@
+{
+  "name": "zmod-monorepo",
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "fixtures/*"
+  ],
+  "scripts": {
+    "build": "cargo build --release",
+    "build:napi": "cd crates/zmod-napi && napi build --platform --release",
+    "test": "cargo test",
+    "benchmark": "cd benchmark && cargo bench",
+    "fixture:react": "cd fixtures/react-hooks-migration && npm test",
+    "fmt": "oxfmt"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.28.0",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@8.0.0"
+}

@@ -1,0 +1,18 @@
+[package]
+name = "zmod-napi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+zmod-core = { path = "../zmod-core" }
+swc_core.workspace = true
+napi.workspace = true
+napi-derive.workspace = true
+serde_json = "1.0"
+
+[build-dependencies]
+napi-build.workspace = true

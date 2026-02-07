@@ -1,0 +1,20 @@
+{
+  "name": "@zmod-fixtures/rename-unsafe-lifecycles",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Example: Rename deprecated React lifecycle methods using zmod",
+  "type": "module",
+  "scripts": {
+    "codemod": "tsx codemod.ts",
+    "test": "tsx codemod.ts && echo '✅ Codemod completed'",
+    "restore": "git checkout src/ || echo 'No git changes to restore'"
+  },
+  "dependencies": {
+    "zmod": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}

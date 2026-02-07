@@ -1,0 +1,29 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+
+# Node
+node_modules/
+dist/
+*.node
+.npm/
+.pnpm-store/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.log
+pnpm-lock.yaml
+package-lock.json
+
+.claude/

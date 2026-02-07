@@ -1,0 +1,30 @@
+[workspace]
+members = ["crates/zmod-core", "crates/zmod-napi"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["zmod contributors"]
+repository = "https://github.com/yourusername/zmod"
+
+[workspace.dependencies]
+# SWC
+swc_core = { version = "0.95", features = [
+  "common",
+  "ecma_ast",
+  "ecma_parser",
+  "ecma_visit",
+  "ecma_transforms",
+  "ecma_codegen",
+] }
+
+# Serde (pin below 1.0.228 for swc_common compatibility)
+serde = { version = ">=1.0, <1.0.219", features = ["derive"] }
+serde_json = "1.0"
+
+# NAPI
+napi = "2.16"
+napi-derive = "2.16"
+napi-build = "2.1"
