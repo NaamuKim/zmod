@@ -8,7 +8,7 @@
   "scripts": {
     "build": "cargo build --release",
     "build:napi": "cd crates/zmod-napi && napi build --platform --release",
-    "test": "cargo test",
+    "test": "pnpm run -r test",
     "benchmark": "cd benchmark && cargo bench",
     "fixture:react": "cd fixtures/react-hooks-migration && npm test",
     "fmt": "oxfmt"
