@@ -1,0 +1,4 @@
+[tools]
+node = "22"
+pnpm = "8"
+rust = "stable"

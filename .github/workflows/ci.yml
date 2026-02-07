@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: pnpm install
+      - name: Build NAPI binding
+        run: |
+          cd packages/zmod
+          ./node_modules/.bin/napi build --platform --release --cargo-cwd ../../crates/zmod-napi
+      - name: Build TypeScript
+        run: pnpm --filter zmod build
+      - run: pnpm test
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: pnpm install
+      - run: pnpm fmt --check
