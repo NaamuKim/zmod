@@ -3,8 +3,7 @@
 export declare function transformCode(code: string, options: TransformOptions): TransformResult;
 
 export interface TransformOptions {
-  from: string;
-  to: string;
+  renames: Record<string, string>;
 }
 
 export interface TransformResult {

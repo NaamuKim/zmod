@@ -25,6 +25,9 @@
     "test": "vitest run",
     "artifacts": "napi artifacts"
   },
+  "dependencies": {
+    "tinyglobby": "^0.2.12"
+  },
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1",
     "@types/node": "^25.2.1",

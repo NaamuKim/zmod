@@ -1,9 +1,9 @@
 import { readFile, writeFile } from "fs/promises";
 import { createRequire } from "module";
+import { glob } from "tinyglobby";
 
 export interface TransformOptions {
-  from: string;
-  to: string;
+  renames: Record<string, string>;
 }
 
 export interface TransformResult {
@@ -11,6 +11,15 @@ export interface TransformResult {
   modified: boolean;
   output?: string;
   error?: string;
+}
+
+export interface ZmodOptions {
+  include: string | string[];
+  renames: Record<string, string>;
+}
+
+export interface ZmodResult {
+  files: Array<{ path: string } & TransformResult>;
 }
 
 // Try to load native NAPI binding
@@ -26,47 +35,8 @@ try {
 }
 
 /**
- * Transform a file by renaming identifiers.
+ * Transform a code string by batch-renaming identifiers.
  * Uses native Rust/SWC binding when available, falls back to JS regex.
- */
-export async function transformFile(
-  filePath: string,
-  options: TransformOptions,
-): Promise<TransformResult> {
-  try {
-    const code = await readFile(filePath, "utf-8");
-
-    let result: TransformResult;
-
-    if (nativeTransformCode) {
-      result = nativeTransformCode(code, options);
-    } else {
-      const regex = new RegExp(`\\b${options.from}\\b`, "g");
-      const transformed = code.replace(regex, options.to);
-      const modified = code !== transformed;
-      result = {
-        success: true,
-        modified,
-        output: modified ? transformed : undefined,
-      };
-    }
-
-    if (result.modified && result.output) {
-      await writeFile(filePath, result.output, "utf-8");
-    }
-
-    return result;
-  } catch (error) {
-    return {
-      success: false,
-      modified: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-/**
- * Transform code string
  */
 export function transform(code: string, options: TransformOptions): TransformResult {
   if (nativeTransformCode) {
@@ -74,8 +44,11 @@ export function transform(code: string, options: TransformOptions): TransformRes
   }
 
   try {
-    const regex = new RegExp(`\\b${options.from}\\b`, "g");
-    const transformed = code.replace(regex, options.to);
+    let transformed = code;
+    for (const [from, to] of Object.entries(options.renames)) {
+      const regex = new RegExp(`\\b${from}\\b`, "g");
+      transformed = transformed.replace(regex, to);
+    }
     const modified = code !== transformed;
 
     return {
@@ -93,40 +66,43 @@ export function transform(code: string, options: TransformOptions): TransformRes
 }
 
 /**
- * Fluent API for chaining transformations
+ * Transform a file by batch-renaming identifiers.
  */
-export class CodeMod {
-  private files: string[] = [];
-  private transforms: TransformOptions[] = [];
+export async function transformFile(
+  filePath: string,
+  options: TransformOptions,
+): Promise<TransformResult> {
+  try {
+    const code = await readFile(filePath, "utf-8");
+    const result = transform(code, options);
 
-  static from(pattern: string): CodeMod {
-    const mod = new CodeMod();
-    mod.files = [pattern];
-    return mod;
-  }
-
-  find(from: string): this {
-    this.transforms.push({ from, to: "" });
-    return this;
-  }
-
-  replace(to: string): this {
-    if (this.transforms.length > 0) {
-      this.transforms[this.transforms.length - 1].to = to;
-    }
-    return this;
-  }
-
-  async execute(): Promise<TransformResult[]> {
-    const results: TransformResult[] = [];
-
-    for (const file of this.files) {
-      for (const transform of this.transforms) {
-        const result = await transformFile(file, transform);
-        results.push(result);
-      }
+    if (result.modified && result.output) {
+      await writeFile(filePath, result.output, "utf-8");
     }
 
-    return results;
+    return result;
+  } catch (error) {
+    return {
+      success: false,
+      modified: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
+}
+
+/**
+ * Top-level API: glob files and batch-rename identifiers across all matches.
+ */
+export async function zmod(options: ZmodOptions): Promise<ZmodResult> {
+  const patterns = Array.isArray(options.include) ? options.include : [options.include];
+  const files = await glob(patterns);
+
+  const results: ZmodResult["files"] = [];
+
+  for (const file of files) {
+    const result = await transformFile(file, { renames: options.renames });
+    results.push({ path: file, ...result });
+  }
+
+  return { files: results };
 }

@@ -55,20 +55,19 @@ export default (file, api, options) => {
 };
 ```
 
-**zmod** — 10 lines:
+**zmod** — 3 lines:
 
 ```ts
-import { transformFile } from "zmod";
+import { zmod } from "zmod";
 
-const renames = {
-  componentWillMount: "UNSAFE_componentWillMount",
-  componentWillReceiveProps: "UNSAFE_componentWillReceiveProps",
-  componentWillUpdate: "UNSAFE_componentWillUpdate",
-};
-
-for (const [from, to] of Object.entries(renames)) {
-  await transformFile("./src/App.tsx", { from, to });
-}
+await zmod({
+  include: "src/**/*.tsx",
+  renames: {
+    componentWillMount: "UNSAFE_componentWillMount",
+    componentWillReceiveProps: "UNSAFE_componentWillReceiveProps",
+    componentWillUpdate: "UNSAFE_componentWillUpdate",
+  },
+});
 ```
 
 Full source in [`fixtures/rename-unsafe-lifecycles/`](./fixtures/rename-unsafe-lifecycles/).
@@ -81,19 +80,51 @@ npm install zmod
 
 ## API
 
+### `zmod(options)`
+
+Top-level API: glob files and batch-rename identifiers.
+
+```ts
+import { zmod } from "zmod";
+
+const result = await zmod({
+  include: "src/**/*.tsx",
+  renames: {
+    componentWillMount: "UNSAFE_componentWillMount",
+    componentWillReceiveProps: "UNSAFE_componentWillReceiveProps",
+    componentWillUpdate: "UNSAFE_componentWillUpdate",
+  },
+});
+
+result.files; // Array<{ path, success, modified }>
+```
+
 ### `transformFile(path, options)`
 
-Find and rename identifiers in a file.
+Batch-rename identifiers in a single file.
 
 ```ts
 import { transformFile } from "zmod";
 
 const result = await transformFile("./src/app.ts", {
-  from: "useState",
-  to: "useSignal",
+  renames: { useState: "useSignal" },
 });
 
 result.modified; // boolean
+```
+
+### `transform(code, options)`
+
+Batch-rename identifiers in a code string.
+
+```ts
+import { transform } from "zmod";
+
+const result = transform("const foo = 1;", {
+  renames: { foo: "bar" },
+});
+
+result.output; // "const bar = 1;"
 ```
 
 ## License
