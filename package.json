@@ -6,14 +6,20 @@
     "fixtures/*"
   ],
   "scripts": {
-    "build": "cargo build --release",
-    "build:napi": "cd crates/zmod-napi && napi build --platform --release",
+    "build": "pnpm build:napi && pnpm build:ts",
+    "build:napi": "cd packages/zmod && ./node_modules/.bin/napi build --platform --release --manifest-path ../../crates/zmod-napi/Cargo.toml",
+    "build:ts": "pnpm --filter zmod build",
     "test": "pnpm --filter './packages/*' run test",
     "benchmark": "cd benchmark && cargo bench",
     "fixture:react": "cd fixtures/react-hooks-migration && npm test",
-    "fmt": "oxfmt"
+    "fmt": "oxfmt",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8",
     "lefthook": "^2.1.0",
     "oxfmt": "^0.28.0",
     "typescript": "^5.9.3"
