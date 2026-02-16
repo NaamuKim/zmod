@@ -1,5 +1,22 @@
 # zmod
 
+## 0.2.1
+
+### Patch Changes
+
+- [`14fd3da`](https://github.com/NaamuKim/zmod/commit/14fd3dadf978bc8faa0c1b55065c1a0ba9d68960) Thanks [@NaamuKim](https://github.com/NaamuKim)! - Replace SWC backend with oxc for ~2.7x faster transforms
+
+  - Switched parser and visitor
+    from SWC to oxc with
+    span-based patching
+  - Preserves original
+    formatting (no codegen
+    reformatting)
+  - Removed SWC dependency
+    entirely
+  - Updated NAPI config to fix
+    deprecation warnings
+
 ## 0.2.0
 
 ### Minor Changes
