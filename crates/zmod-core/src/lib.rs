@@ -1,6 +1,4 @@
 use serde::{Deserialize, Serialize};
-use swc_core::ecma::ast::*;
-use swc_core::ecma::visit::{Visit, VisitWith};
 
 /// Represents the result of a transformation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,12 +12,11 @@ pub struct TransformResult {
 /// A collection of AST nodes
 pub struct Collection<T> {
     nodes: Vec<T>,
-    source: String,
 }
 
 impl<T> Collection<T> {
-    pub fn new(nodes: Vec<T>, source: String) -> Self {
-        Self { nodes, source }
+    pub fn new(nodes: Vec<T>) -> Self {
+        Self { nodes }
     }
 
     pub fn len(&self) -> usize {

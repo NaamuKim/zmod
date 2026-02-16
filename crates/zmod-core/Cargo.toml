@@ -6,6 +6,5 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-swc_core.workspace = true
 serde.workspace = true
 serde_json.workspace = true

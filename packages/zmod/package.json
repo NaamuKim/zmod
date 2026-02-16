@@ -1,14 +1,14 @@
 {
   "name": "zmod",
   "version": "0.2.0",
-  "description": "Lightning-fast codemod toolkit powered by Rust and SWC",
+  "description": "Lightning-fast codemod toolkit powered by Rust and oxc",
   "keywords": [
     "ast",
     "codemod",
     "jscodeshift",
+    "oxc",
     "refactor",
     "rust",
-    "swc",
     "transform"
   ],
   "files": [
@@ -35,9 +35,12 @@
     "vitest": "^4.0.18"
   },
   "napi": {
-    "name": "zmod",
-    "triples": {
-      "defaults": true
-    }
+    "binaryName": "zmod",
+    "targets": [
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu"
+    ]
   }
 }

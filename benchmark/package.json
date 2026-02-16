@@ -1,0 +1,16 @@
+{
+  "name": "@zmod-fixtures/benchmark",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "tsx generate-fixtures.ts",
+    "bench": "tsx generate-fixtures.ts && vitest bench --run"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.1",
+    "jscodeshift": "^17.3.0",
+    "oxc-parser": "^0.112.0",
+    "tsx": "^4.21.0",
+    "vitest": "^4.0.18"
+  }
+}

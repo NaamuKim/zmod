@@ -16,6 +16,8 @@
 
 **Blazing fast codemods with a super simple API.**
 
+**~80x faster** than jscodeshift (native oxc) on 500 TSX files. See [`benchmark/`](./benchmark/).
+
 ## Before / After
 
 React's [rename-unsafe-lifecycles](https://github.com/reactjs/react-codemod#rename-unsafe-lifecycles) renames 3 methods. That's it.

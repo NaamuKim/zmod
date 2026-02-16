@@ -17,6 +17,9 @@ dist/
 *.swo
 *~
 
+# Benchmark fixtures (generated)
+benchmark/fixtures/*.tsx
+
 # OS
 .DS_Store
 Thumbs.db

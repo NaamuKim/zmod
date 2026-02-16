@@ -10,21 +10,18 @@ authors = ["zmod contributors"]
 repository = "https://github.com/yourusername/zmod"
 
 [workspace.dependencies]
-# SWC
-swc_core = { version = "56.0", features = [
-  "common",
-  "ecma_ast",
-  "ecma_parser",
-  "ecma_visit",
-  "ecma_transforms",
-  "ecma_codegen",
-] }
+# oxc
+oxc_allocator = "0.113.0"
+oxc_parser = "0.113.0"
+oxc_span = "0.113.0"
+oxc_ast = "0.113.0"
+oxc_ast_visit = "0.113.0"
 
 # Serde
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # NAPI
-napi = "3.8"
-napi-derive = "3.5"
-napi-build = "2.3"
+napi = "3.8.3"
+napi-derive = "3.5.2"
+napi-build = "2.3.1"
