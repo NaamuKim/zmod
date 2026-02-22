@@ -26,6 +26,8 @@
     "artifacts": "napi artifacts"
   },
   "dependencies": {
+    "ast-types": "^0.16.1",
+    "oxc-parser": "^0.112.0",
     "tinyglobby": "^0.2.12"
   },
   "devDependencies": {

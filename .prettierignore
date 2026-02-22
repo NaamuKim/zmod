@@ -1,0 +1,3 @@
+# Fixture expected outputs must match exact transform output (not formatted)
+fixtures/**/expected-output.*
+fixtures/**/input.*

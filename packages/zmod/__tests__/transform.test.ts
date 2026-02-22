@@ -50,6 +50,192 @@ describe("transform", () => {
   });
 });
 
+describe("imports.replaceSource", () => {
+  it("replaces import source string", () => {
+    const code = `import { act } from "react-dom/test-utils";`;
+    const result = transform(code, {
+      imports: { replaceSource: { "react-dom/test-utils": "react" } },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain('"react"');
+    expect(result.output).not.toContain("react-dom/test-utils");
+    expect(result.output).toContain("act");
+  });
+
+  it("does not touch non-matching import sources", () => {
+    const code = `import { useState } from "react";`;
+    const result = transform(code, {
+      imports: { replaceSource: { "react-dom/test-utils": "react" } },
+    });
+
+    expect(result.modified).toBe(false);
+  });
+});
+
+describe("imports.renameSpecifier", () => {
+  it("renames a named import specifier", () => {
+    const code = `import { useFormState } from "react-dom";`;
+    const result = transform(code, {
+      imports: { renameSpecifier: { useFormState: "useActionState" } },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain("useActionState");
+    expect(result.output).not.toContain("useFormState");
+  });
+
+  it("renames only the local part of an aliased import", () => {
+    const code = `import { foo as bar } from "x";`;
+    const result = transform(code, {
+      imports: { renameSpecifier: { bar: "baz" } },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain("foo as baz");
+  });
+
+  it("renames combined with replaceSource", () => {
+    const code = `import { act } from "react-dom/test-utils";`;
+    const result = transform(code, {
+      imports: {
+        replaceSource: { "react-dom/test-utils": "react" },
+        renameSpecifier: { act: "act" },
+      },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain('"react"');
+    expect(result.output).toContain("act");
+  });
+});
+
+describe("imports.removeSpecifier", () => {
+  it("removes a named import specifier from multi-specifier import", () => {
+    const code = `import { useState, act, useEffect } from "react";`;
+    const result = transform(code, {
+      imports: { removeSpecifier: ["act"] },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain("useState");
+    expect(result.output).toContain("useEffect");
+    // Check that "act" is not present as a specifier (but "react" still contains "act" substring)
+    expect(result.output).toMatch(/\{[^}]*useState[^}]*useEffect[^}]*\}/);
+    expect(result.output).not.toMatch(/\bact\b\s*[,}]/);
+  });
+
+  it("removes entire import when all specifiers removed", () => {
+    const code = `import { act } from "react";\nconst x = 1;`;
+    const result = transform(code, {
+      imports: { removeSpecifier: ["act"] },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).not.toContain("import");
+    expect(result.output).toContain("const x = 1;");
+  });
+});
+
+describe("imports.addImport", () => {
+  it("adds a named import at top of file", () => {
+    const code = `const x = 1;`;
+    const result = transform(code, {
+      imports: { addImport: [{ from: "react", names: ["useState"] }] },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain('import { useState } from "react"');
+    expect(result.output).toContain("const x = 1;");
+  });
+
+  it("adds a default import", () => {
+    const code = `const x = 1;`;
+    const result = transform(code, {
+      imports: { addImport: [{ from: "prop-types", defaultName: "PropTypes" }] },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain('import PropTypes from "prop-types"');
+  });
+
+  it("adds a default + named import", () => {
+    const code = `const x = 1;`;
+    const result = transform(code, {
+      imports: {
+        addImport: [{ from: "react", defaultName: "React", names: ["useState"] }],
+      },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain('import React, { useState } from "react"');
+  });
+});
+
+describe("removeJsxMemberSuffix", () => {
+  it("removes .Provider from JSX member expression", () => {
+    const code = `const el = <Context.Provider value={1}><Child /></Context.Provider>;`;
+    const result = transform(code, {
+      removeJsxMemberSuffix: ["Provider"],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain("<Context value={1}>");
+    expect(result.output).toContain("</Context>");
+    expect(result.output).not.toContain("Provider");
+  });
+
+  it("does not touch non-matching suffixes", () => {
+    const code = `const el = <Ctx.Consumer />;`;
+    const result = transform(code, {
+      removeJsxMemberSuffix: ["Provider"],
+    });
+
+    expect(result.modified).toBe(false);
+  });
+});
+
+describe("replaceText", () => {
+  it("replaces static member expression (React.PropTypes → PropTypes)", () => {
+    const code = `const types = React.PropTypes.string;`;
+    const result = transform(code, {
+      replaceText: [{ matchText: "React.PropTypes", replace: "PropTypes" }],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).toContain("PropTypes.string");
+    expect(result.output).not.toContain("React.PropTypes");
+  });
+});
+
+describe("combined transforms", () => {
+  it("renames + imports.renameSpecifier in one call", () => {
+    const code = `import { useFormState } from "react-dom";\nconst [state] = useFormState(action);`;
+    const result = transform(code, {
+      renames: { useFormState: "useActionState" },
+      imports: { renameSpecifier: { useFormState: "useActionState" } },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.modified).toBe(true);
+    expect(result.output).not.toContain("useFormState");
+    expect(result.output).toContain("useActionState");
+    // Should have renamed both import specifier and usage
+    expect(result.output).toContain('import { useActionState } from "react-dom"');
+  });
+});
+
 describe("transformFile", () => {
   const tmpFile = join(__dirname, "__tmp_test__.ts");
 
