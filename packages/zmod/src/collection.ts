@@ -12,6 +12,9 @@ export interface NodePath {
   parent: NodePath | null;
   parentKey: string | null;
   parentIndex: number | null;
+  value: ASTNode; // alias for node
+  parentPath: NodePath | null; // alias for parent
+  name: string | null; // alias for parentKey
 }
 
 interface Patch {
@@ -28,7 +31,15 @@ function buildPaths(
   parentKey: string | null,
   parentIndex: number | null,
 ): NodePath[] {
-  const self: NodePath = { node, parent, parentKey, parentIndex };
+  const self: NodePath = {
+    node,
+    parent,
+    parentKey,
+    parentIndex,
+    value: node,
+    parentPath: parent,
+    name: parentKey,
+  };
   const result: NodePath[] = [self];
 
   for (const key of Object.keys(node)) {
@@ -298,6 +309,24 @@ export class Collection {
     return new FilteredCollection(this, matched);
   }
 
+  /** Find VariableDeclarator nodes, optionally filtered by name. */
+  findVariableDeclarators(name?: string): FilteredCollection {
+    const result = this.find("VariableDeclarator");
+    if (name) return result.filter((p) => p.node.id?.name === name);
+    return result;
+  }
+
+  /** Find JSXElement nodes, optionally filtered by element name. */
+  findJSXElements(name?: string): FilteredCollection {
+    if (!name) return this.find("JSXElement");
+    return this.find("JSXElement").filter((p) => {
+      const el = p.node.openingElement?.name;
+      if (!el) return false;
+      if (el.type === "JSXIdentifier") return el.name === name;
+      return false;
+    });
+  }
+
   /** Get the root program paths. */
   get paths(): NodePath[] {
     return this._paths;
@@ -357,7 +386,7 @@ export class Collection {
   /**
    * Apply all patches and return the modified source code.
    */
-  toSource(): string {
+  toSource(_options?: Record<string, any>): string {
     if (this._patches.length === 0) return this._source;
 
     // Sort patches by start offset descending so we can apply from end to start.
@@ -422,9 +451,19 @@ export class FilteredCollection {
     return this._paths[index];
   }
 
-  /** Get the first matched path, or undefined. */
-  get(index: number = 0): NodePath | undefined {
-    return this._paths[index];
+  /**
+   * Get a path by index, or traverse into the first path's node by field names.
+   * - get() → first path
+   * - get(0) → path at index 0
+   * - get("callee") → first path's node.callee
+   * - get("callee", "name") → first path's node.callee.name
+   */
+  get(...fields: (string | number)[]): any {
+    if (fields.length === 0) return this._paths[0];
+    if (fields.length === 1 && typeof fields[0] === "number") return this._paths[fields[0]];
+    let current: any = this._paths[0]?.node;
+    for (const f of fields) current = current?.[f];
+    return current;
   }
 
   /**
@@ -503,6 +542,69 @@ export class FilteredCollection {
     return this;
   }
 
+  /** Find VariableDeclarator nodes, optionally filtered by name. */
+  findVariableDeclarators(name?: string): FilteredCollection {
+    const result = this.find("VariableDeclarator");
+    if (name) return result.filter((p) => p.node.id?.name === name);
+    return result;
+  }
+
+  /** Find JSXElement nodes, optionally filtered by element name. */
+  findJSXElements(name?: string): FilteredCollection {
+    if (!name) return this.find("JSXElement");
+    return this.find("JSXElement").filter((p) => {
+      const el = p.node.openingElement?.name;
+      if (!el) return false;
+      if (el.type === "JSXIdentifier") return el.name === name;
+      return false;
+    });
+  }
+
+  /** Test whether at least one path satisfies the predicate. */
+  some(callback: (path: NodePath, index: number) => boolean): boolean {
+    return this._paths.some(callback);
+  }
+
+  /** Test whether all paths satisfy the predicate. */
+  every(callback: (path: NodePath, index: number) => boolean): boolean {
+    return this._paths.every(callback);
+  }
+
+  /** Return the number of matched paths (same as length). */
+  size(): number {
+    return this._paths.length;
+  }
+
+  /** Return the AST nodes of all matched paths. */
+  nodes(): ASTNode[] {
+    return this._paths.map((p) => p.node);
+  }
+
+  /** Map over matched paths, returning a new FilteredCollection from non-null results. */
+  map(callback: (path: NodePath, index: number) => NodePath | null): FilteredCollection {
+    const results: NodePath[] = [];
+    for (let i = 0; i < this._paths.length; i++) {
+      const result = callback(this._paths[i], i);
+      if (result != null) results.push(result);
+    }
+    return new FilteredCollection(this._root, results);
+  }
+
+  /** Return the root AST paths. */
+  getAST(): NodePath[] {
+    return this._root.paths;
+  }
+
+  /** Return an array of unique node types in this collection. */
+  getTypes(): string[] {
+    return [...new Set(this._paths.map((p) => p.node.type))];
+  }
+
+  /** Check if all paths in this collection are of the given type. */
+  isOfType(type: string): boolean {
+    return this._paths.every((p) => p.node.type === type);
+  }
+
   /**
    * Rename all identifiers within matched nodes.
    */
@@ -517,7 +619,7 @@ export class FilteredCollection {
   }
 
   /** Convert the full modified source to string. */
-  toSource(): string {
+  toSource(_options?: Record<string, any>): string {
     return this._root.toSource();
   }
 

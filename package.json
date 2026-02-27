@@ -15,13 +15,18 @@
     "fmt": "oxfmt",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "compat": "tsx scripts/compat-check.ts"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.2",
     "@changesets/cli": "^2.29.8",
+    "@types/jscodeshift": "^17.3.0",
+    "jscodeshift": "^17.3.0",
     "lefthook": "^2.1.0",
     "oxfmt": "^0.28.0",
+    "ts-morph": "^27.0.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "packageManager": "pnpm@10.28.2"
