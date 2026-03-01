@@ -1,0 +1,54 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: pnpm install
+
+      - name: Run jscodeshift compat benchmark
+        run: pnpm bench:compat --json > bench-result.json
+
+      - name: Generate badge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const result = JSON.parse(fs.readFileSync('bench-result.json', 'utf8'));
+            const speedup = result.avgSpeedup;
+            const color = speedup >= 10 ? 'brightgreen' : speedup >= 5 ? 'green' : 'yellow';
+            const badge = {
+              schemaVersion: 1,
+              label: 'vs jscodeshift',
+              message: `${speedup}x faster`,
+              color,
+            };
+            fs.writeFileSync('.github/badges/benchmark.json', JSON.stringify(badge, null, 2));
+
+      - name: Generate compat badge
+        run: |
+          pnpm compat --json > compat-result.json
+          node -e "
+            const r = JSON.parse(require('fs').readFileSync('compat-result.json','utf8'));
+            const pct = r.summary.percent;
+            const color = pct >= 100 ? 'brightgreen' : pct >= 80 ? 'green' : 'yellow';
+            const badge = { schemaVersion: 1, label: 'jscodeshift compat', message: pct + '%', color };
+            require('fs').writeFileSync('.github/badges/compat.json', JSON.stringify(badge, null, 2));
+          "
+
+      - name: Commit badges
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/badges/
+          git diff --staged --quiet || git commit -m "chore: update badges [skip ci]"
+          git push

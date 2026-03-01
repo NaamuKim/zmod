@@ -11,6 +11,7 @@
     "build:ts": "pnpm --filter zmod build",
     "test": "pnpm --filter './packages/*' run test",
     "benchmark": "cd benchmark && cargo bench",
+    "bench:compat": "tsx benchmark/jscodeshift-compat.bench.ts",
     "fixture:react": "cd fixtures/react-hooks-migration && npm test",
     "fmt": "oxfmt",
     "changeset": "changeset",

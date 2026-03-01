@@ -7,20 +7,166 @@ export interface ASTNode {
   [key: string]: any;
 }
 
-export interface NodePath {
-  node: ASTNode;
-  parent: NodePath | null;
-  parentKey: string | null;
-  parentIndex: number | null;
-  value: ASTNode; // alias for node
-  parentPath: NodePath | null; // alias for parent
-  name: string | null; // alias for parentKey
-}
-
 interface Patch {
   start: number;
   end: number;
   replacement: string;
+}
+
+// ── NodePath ──────────────────────────────────────────────────────────
+
+const SCOPE_TYPES = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+  "Program",
+]);
+
+export class NodePath {
+  node: ASTNode;
+  parent: NodePath | null;
+  parentKey: string | null;
+  parentIndex: number | null;
+  private _root: any; // Collection — typed as any to avoid forward-ref
+
+  constructor(
+    node: ASTNode,
+    parent: NodePath | null,
+    parentKey: string | null,
+    parentIndex: number | null,
+    root?: any,
+  ) {
+    this.node = node;
+    this.parent = parent;
+    this.parentKey = parentKey;
+    this.parentIndex = parentIndex;
+    this._root = root ?? null;
+  }
+
+  // ── Aliases ──
+
+  get value(): ASTNode {
+    return this.node;
+  }
+  get parentPath(): NodePath | null {
+    return this.parent;
+  }
+  get name(): string | null {
+    return this.parentKey;
+  }
+
+  // ── Scope ──
+
+  get scope(): { node: ASTNode; isGlobal: boolean; path: NodePath } | null {
+    let current: NodePath | null = this as NodePath;
+    while (current) {
+      if (SCOPE_TYPES.has(current.node.type)) {
+        return { node: current.node, isGlobal: current.node.type === "Program", path: current };
+      }
+      current = current.parent;
+    }
+    return null;
+  }
+
+  // ── Path traversal ──
+
+  getValueProperty(name: string): any {
+    return this.node[name];
+  }
+
+  get(...names: (string | number)[]): any {
+    let current: any = this.node;
+    for (const n of names) {
+      if (current == null) return { value: undefined };
+      current = current[n];
+    }
+    if (current && typeof current === "object" && typeof current.type === "string") {
+      const key = names.length > 0 ? String(names[0]) : null;
+      const idx =
+        names.length > 0 && typeof names[names.length - 1] === "number"
+          ? (names[names.length - 1] as number)
+          : null;
+      return new NodePath(current as ASTNode, this, key, idx, this._root);
+    }
+    return { value: current };
+  }
+
+  // ── Array iteration (Path base class compat) ──
+
+  each(callback: (path: NodePath, index: number) => void, _context?: any): void {
+    // Path.each iterates when the value is an array — not applicable for node paths
+  }
+
+  map(callback: (path: NodePath, index: number) => any, _context?: any): any[] {
+    return [];
+  }
+
+  filter(callback: (path: NodePath, index: number) => boolean, _context?: any): any[] {
+    return [];
+  }
+
+  // ── Array mutation (Path base class compat) ──
+
+  shift(): any {
+    return undefined;
+  }
+  unshift(..._args: any[]): void {}
+  push(..._args: any[]): void {}
+  pop(): any {
+    return undefined;
+  }
+  insertAt(_index: number, ..._args: any[]): void {}
+
+  // ── Node mutation ──
+
+  insertBefore(...args: any[]): void {
+    if (!this._root) return;
+    for (const arg of args) {
+      const text = typeof arg === "string" ? arg : printNode(arg);
+      this._root._addPatch(this.node.start, this.node.start, text);
+    }
+  }
+
+  insertAfter(...args: any[]): void {
+    if (!this._root) return;
+    for (const arg of args) {
+      const text = typeof arg === "string" ? arg : printNode(arg);
+      this._root._addPatch(this.node.end, this.node.end, text);
+    }
+  }
+
+  replace(...args: any[]): void {
+    if (!this._root) return;
+    if (args.length === 0) {
+      this._root._addPatch(this.node.start, this.node.end, "");
+    } else {
+      const text = args.map((a: any) => (typeof a === "string" ? a : printNode(a))).join("");
+      this._root._addPatch(this.node.start, this.node.end, text);
+    }
+  }
+
+  prune(): NodePath {
+    if (this._root) {
+      this._root._addPatch(this.node.start, this.node.end, "");
+    }
+    return this;
+  }
+
+  // ── Statement helpers ──
+
+  needsParens(_assumeExpressionContext?: boolean): boolean {
+    const t = this.node.type;
+    return t === "ObjectExpression" || t === "FunctionExpression";
+  }
+
+  canBeFirstInStatement(): boolean {
+    return !this.needsParens();
+  }
+
+  firstInStatement(): boolean {
+    if (this.parent == null) return false;
+    return this.parentKey === "body" && this.parentIndex === 0;
+  }
 }
 
 // ── AST traversal helpers ──────────────────────────────────────────────
@@ -30,16 +176,9 @@ function buildPaths(
   parent: NodePath | null,
   parentKey: string | null,
   parentIndex: number | null,
+  root: any,
 ): NodePath[] {
-  const self: NodePath = {
-    node,
-    parent,
-    parentKey,
-    parentIndex,
-    value: node,
-    parentPath: parent,
-    name: parentKey,
-  };
+  const self = new NodePath(node, parent, parentKey, parentIndex, root);
   const result: NodePath[] = [self];
 
   for (const key of Object.keys(node)) {
@@ -49,11 +188,11 @@ function buildPaths(
         for (let i = 0; i < val.length; i++) {
           const child = val[i];
           if (child && typeof child.type === "string") {
-            result.push(...buildPaths(child as ASTNode, self, key, i));
+            result.push(...buildPaths(child as ASTNode, self, key, i, root));
           }
         }
       } else if (typeof val.type === "string") {
-        result.push(...buildPaths(val as ASTNode, self, key, null));
+        result.push(...buildPaths(val as ASTNode, self, key, null, root));
       }
     }
   }
@@ -286,8 +425,8 @@ export class Collection {
   constructor(source: string, program: ASTNode) {
     this._source = source;
     this._program = program;
-    this._paths = buildPaths(program, null, null, null);
     this._patches = [];
+    this._paths = buildPaths(program, null, null, null, this);
   }
 
   /**
@@ -324,6 +463,34 @@ export class Collection {
       if (!el) return false;
       if (el.type === "JSXIdentifier") return el.name === name;
       return false;
+    });
+  }
+
+  /** Find JSXElements by the module name they were imported from. */
+  findJSXElementsByModuleName(moduleName: string): FilteredCollection {
+    // Build map: local variable name → imported module source
+    const localToModule = new Map<string, string>();
+    for (const p of this._paths) {
+      if (p.node.type !== "ImportDeclaration") continue;
+      const src = p.node.source?.value;
+      if (!src) continue;
+      for (const spec of p.node.specifiers || []) {
+        if (spec.local?.name) localToModule.set(spec.local.name, src);
+      }
+    }
+
+    return this.find("JSXElement").filter((p) => {
+      const el = p.node.openingElement?.name;
+      if (!el) return false;
+      let rootName: string | null = null;
+      if (el.type === "JSXIdentifier") rootName = el.name;
+      else if (el.type === "JSXMemberExpression") {
+        let obj = el.object;
+        while (obj?.type === "JSXMemberExpression") obj = obj.object;
+        if (obj?.type === "JSXIdentifier") rootName = obj.name;
+      }
+      if (!rootName) return false;
+      return localToModule.get(rootName) === moduleName;
     });
   }
 
@@ -477,7 +644,13 @@ export class FilteredCollection {
     const results: NodePath[] = [];
 
     for (const path of this._paths) {
-      const descendantPaths = buildPaths(path.node, path.parent, path.parentKey, path.parentIndex);
+      const descendantPaths = buildPaths(
+        path.node,
+        path.parent,
+        path.parentKey,
+        path.parentIndex,
+        this._root,
+      );
       // skip the first one (self)
       for (let i = 1; i < descendantPaths.length; i++) {
         const dp = descendantPaths[i];
@@ -557,6 +730,93 @@ export class FilteredCollection {
       if (!el) return false;
       if (el.type === "JSXIdentifier") return el.name === name;
       return false;
+    });
+  }
+
+  /** Return all child nodes (JSXElement children) of matched paths. */
+  childNodes(): FilteredCollection {
+    const results: NodePath[] = [];
+    for (const path of this._paths) {
+      const children: any[] = path.node.children;
+      if (!Array.isArray(children)) continue;
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        if (child && typeof child === "object" && child.type) {
+          results.push(new NodePath(child, path, "children", i, this._root));
+        }
+      }
+    }
+    return new FilteredCollection(this._root, results);
+  }
+
+  /** Return only JSXElement children of matched paths. */
+  childElements(): FilteredCollection {
+    return this.childNodes().filter((p) => p.node.type === "JSXElement");
+  }
+
+  /** Traverse up and find the closest ancestor of the given type. */
+  closest(
+    type: string | { toString(): string; check(node: any): boolean },
+    filter?: Record<string, any>,
+  ): FilteredCollection {
+    const typeName = typeof type === "string" ? type : type.toString();
+    const results: NodePath[] = [];
+    const seen = new Set<ASTNode>();
+
+    for (const path of this._paths) {
+      let current = path.parent;
+      while (current) {
+        if (current.node.type === typeName) {
+          if (!filter || matchesFilter(current.node, filter)) {
+            if (!seen.has(current.node)) {
+              seen.add(current.node);
+              results.push(current);
+            }
+            break;
+          }
+        }
+        current = current.parent;
+      }
+    }
+
+    return new FilteredCollection(this._root, results);
+  }
+
+  /** Find the closest enclosing scope node (Function or Program). */
+  closestScope(): FilteredCollection {
+    const results: NodePath[] = [];
+    const seen = new Set<ASTNode>();
+
+    for (const path of this._paths) {
+      let current = path.parent;
+      while (current) {
+        if (SCOPE_TYPES.has(current.node.type)) {
+          if (!seen.has(current.node)) {
+            seen.add(current.node);
+            results.push(current);
+          }
+          break;
+        }
+        current = current.parent;
+      }
+    }
+
+    return new FilteredCollection(this._root, results);
+  }
+
+  /** Find variable declarators by name extracted via nameGetter callback. */
+  getVariableDeclarators(
+    nameGetter: (path: NodePath) => string | null | undefined,
+  ): FilteredCollection {
+    const names = new Set<string>();
+    for (const path of this._paths) {
+      const name = nameGetter(path);
+      if (name) names.add(name);
+    }
+    if (names.size === 0) return new FilteredCollection(this._root, []);
+    return this._root.find("VariableDeclarator").filter((p) => {
+      const id = p.node.id;
+      return id && names.has(id.name);
     });
   }
 

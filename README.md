@@ -16,7 +16,8 @@
 
 **Blazing fast codemods with a super simple API.**
 
-**~80x faster** than jscodeshift (native oxc) on 500 TSX files. See [`benchmark/`](./benchmark/).
+[![jscodeshift compat](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/anthropics/zmod/main/.github/badges/compat.json)](./scripts/compat-check.ts)
+[![vs jscodeshift](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/anthropics/zmod/main/.github/badges/benchmark.json)](./benchmark/jscodeshift-compat.bench.ts)
 
 ## Before / After
 
@@ -82,7 +83,7 @@ npm install zmod
 
 ## API
 
-### `zmod(options)`
+### Simple API — `zmod(options)`
 
 Top-level API: glob files and batch-rename identifiers.
 
@@ -99,6 +100,50 @@ const result = await zmod({
 });
 
 result.files; // Array<{ path, success, modified }>
+```
+
+### jscodeshift-compatible API — `j(source)`
+
+Drop-in replacement for jscodeshift's `j(source).find().replaceWith()` workflow. 100% API compatible.
+
+```ts
+import { j } from "zmod";
+
+const source = `import React from 'react';
+const App = () => <div>Hello</div>;`;
+
+const root = j(source);
+
+root.find(j.Identifier, { name: "React" }).replaceWith(j.identifier("R"));
+
+console.log(root.toSource());
+```
+
+#### Writing transforms
+
+```ts
+import type { Transform } from "zmod";
+
+const transform: Transform = (fileInfo, { j }) => {
+  const root = j(fileInfo.source);
+
+  root.find(j.CallExpression, { callee: { name: "oldFn" } }).replaceWith((path) => ({
+    ...path.node,
+    callee: j.identifier("newFn"),
+  }));
+
+  return root.toSource();
+};
+
+export default transform;
+```
+
+#### Batch runner
+
+```ts
+import { run } from "zmod";
+
+await run(transform, { include: ["src/**/*.tsx"] });
 ```
 
 ### `transformFile(path, options)`
@@ -128,6 +173,24 @@ const result = transform("const foo = 1;", {
 
 result.output; // "const bar = 1;"
 ```
+
+## Benchmark
+
+Benchmarks run automatically on every push to `main`.
+
+| Scenario                  | Speedup |
+| ------------------------- | ------- |
+| parse + toSource (small)  | ~11x    |
+| parse + toSource (medium) | ~8x     |
+| parse + toSource (large)  | ~5x     |
+| find CallExpression       | ~11x    |
+| find + filter             | ~11x    |
+| find + replaceWith        | ~8x     |
+| find + remove             | ~7x     |
+| findJSXElements           | ~10x    |
+| complex transform (large) | ~6x     |
+
+**Average: ~8x faster** than jscodeshift, thanks to Rust-powered oxc parsing and span-based patching (no AST re-printing).
 
 ## License
 

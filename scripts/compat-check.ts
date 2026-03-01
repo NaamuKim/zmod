@@ -222,7 +222,13 @@ addEntries(
 // ── Extract zmod implementation (from source code) ────────────────────
 
 // Core: j(source) call + namedTypes/builders dynamically attached in createJ()
-const zmodCoreAPI = new Set(["j(source)", "namedTypes", "builders"]);
+// Also includes Core interface members implemented on j
+const zmodCoreAPI = new Set([
+  "j(source)",
+  "namedTypes",
+  "builders",
+  ...extractInterfaceNames(resolveInterface(path.join(ZMOD_SRC, "jscodeshift.ts"), "JFunction")),
+]);
 
 // Collection: merge Collection + FilteredCollection public members
 const zmodCollectionAPI = new Set([
@@ -232,9 +238,9 @@ const zmodCollectionAPI = new Set([
   ),
 ]);
 
-// NodePath: from NodePath interface
-const zmodNodePathAPI = extractInterfaceNames(
-  resolveInterface(path.join(ZMOD_SRC, "collection.ts"), "NodePath"),
+// NodePath: from NodePath class
+const zmodNodePathAPI = extractClassMemberNames(
+  resolveClass(path.join(ZMOD_SRC, "collection.ts"), "NodePath"),
 );
 
 // ── Compare ───────────────────────────────────────────────────────────
