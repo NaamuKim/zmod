@@ -1,7 +1,7 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Find JSXMemberExpression nodes like <Ctx.Provider>

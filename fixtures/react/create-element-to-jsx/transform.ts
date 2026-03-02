@@ -80,14 +80,14 @@ function createElementToJSX(source: string, node: any, indent: string = ""): str
   return `<${tag}${attrs}>\n${childStrs.join("\n")}\n${indent}</${tag}>`;
 }
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Find only top-level createElement calls (not nested ones)
   // We handle nesting recursively in createElementToJSX
   const calls = root
-    .find(j.CallExpression, {
+    .find(z.CallExpression, {
       callee: {
         type: "MemberExpression",
         object: { name: "React" },

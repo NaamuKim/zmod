@@ -1,10 +1,10 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
-  root.find(j.Identifier, { name: "unstable_handleError" }).forEach((path) => {
+  root.find(z.Identifier, { name: "unstable_handleError" }).forEach((path) => {
     const parent = path.parent;
     if (!parent) return;
     const pt = parent.node.type;

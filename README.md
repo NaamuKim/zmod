@@ -102,19 +102,19 @@ const result = await zmod({
 result.files; // Array<{ path, success, modified }>
 ```
 
-### jscodeshift-compatible API — `j(source)`
+### jscodeshift-compatible API — `z(source)`
 
 Drop-in replacement for jscodeshift's `j(source).find().replaceWith()` workflow. 100% API compatible.
 
 ```ts
-import { j } from "zmod";
+import { z } from "zmod";
 
 const source = `import React from 'react';
 const App = () => <div>Hello</div>;`;
 
-const root = j(source);
+const root = z(source);
 
-root.find(j.Identifier, { name: "React" }).replaceWith(j.identifier("R"));
+root.find(z.Identifier, { name: "React" }).replaceWith(z.identifier("R"));
 
 console.log(root.toSource());
 ```
@@ -124,12 +124,12 @@ console.log(root.toSource());
 ```ts
 import type { Transform } from "zmod";
 
-const transform: Transform = (fileInfo, { j }) => {
-  const root = j(fileInfo.source);
+const transform: Transform = (fileInfo, { z }) => {
+  const root = z(fileInfo.source);
 
-  root.find(j.CallExpression, { callee: { name: "oldFn" } }).replaceWith((path) => ({
+  root.find(z.CallExpression, { callee: { name: "oldFn" } }).replaceWith((path) => ({
     ...path.node,
-    callee: j.identifier("newFn"),
+    callee: z.identifier("newFn"),
   }));
 
   return root.toSource();

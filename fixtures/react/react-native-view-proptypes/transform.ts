@@ -1,13 +1,13 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
   let needsViewPropTypes = false;
 
   // Replace View.propTypes.xxx with ViewPropTypes.xxx
   root
-    .find(j.MemberExpression, {
+    .find(z.MemberExpression, {
       object: {
         type: "MemberExpression",
         object: { name: "View" },
@@ -25,7 +25,7 @@ const transform: Transform = ({ source }, { j }) => {
   // Add ViewPropTypes to destructuring if needed
   if (needsViewPropTypes) {
     // Find destructuring from react-native: var { View, ... } = React;
-    root.find(j.VariableDeclarator).forEach((path) => {
+    root.find(z.VariableDeclarator).forEach((path) => {
       const id = path.node.id;
       if (id?.type !== "ObjectPattern") return;
       const init = path.node.init;

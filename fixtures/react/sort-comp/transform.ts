@@ -23,11 +23,11 @@ function getMethodPriority(name: string, isStatic: boolean): number {
   return LIFECYCLE_ORDER.indexOf("everything-else");
 }
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
-  root.find(j.ClassDeclaration).forEach((classPath) => {
+  root.find(z.ClassDeclaration).forEach((classPath) => {
     const body = classPath.node.body;
     if (!body?.body) return;
 

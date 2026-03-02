@@ -1,10 +1,10 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
-  root.find(j.ImportDeclaration, { source: { value: "react" } }).forEach((path) => {
+  root.find(z.ImportDeclaration, { source: { value: "react" } }).forEach((path) => {
     const specifiers = path.node.specifiers || [];
     const defaultSpec = specifiers.find(
       (s: any) => s.type === "ImportDefaultSpecifier" || s.type === "ImportNamespaceSpecifier",
@@ -15,7 +15,7 @@ const transform: Transform = ({ source }, { j }) => {
     if (!defaultName) return;
 
     // Check if the default import is actually used (beyond JSX which auto-imports)
-    const usages = root.find(j.Identifier, { name: defaultName }).filter((p) => {
+    const usages = root.find(z.Identifier, { name: defaultName }).filter((p) => {
       // Exclude the import specifier itself
       if (p.parent?.node.type === "ImportDefaultSpecifier") return false;
       if (p.parent?.node.type === "ImportNamespaceSpecifier") return false;

@@ -1,4 +1,4 @@
-import { j as zmod } from "../packages/zmod/src/jscodeshift";
+import { z as zmod } from "../packages/zmod/src/jscodeshift";
 import jscodeshiftBase from "jscodeshift";
 
 const jscodeshift = jscodeshiftBase.withParser("tsx");

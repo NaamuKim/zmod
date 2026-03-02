@@ -1,13 +1,13 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Track which methods are bound in constructor: this.x = this.x.bind(this)
   const boundMethods = new Set<string>();
 
-  root.find(j.ClassDeclaration).forEach((classPath) => {
+  root.find(z.ClassDeclaration).forEach((classPath) => {
     // Find constructor
     const constructorBody = classPath.node.body?.body;
     if (!constructorBody) return;

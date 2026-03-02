@@ -1,12 +1,12 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Find all .getDOMNode() calls
   root
-    .find(j.CallExpression, {
+    .find(z.CallExpression, {
       callee: {
         type: "MemberExpression",
         property: { name: "getDOMNode" },

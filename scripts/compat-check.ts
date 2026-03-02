@@ -145,9 +145,9 @@ function addEntries(entries: Array<{ category: string; name: string; displayName
 
 // Core — call signature + namedTypes/builders (dynamic) + Core interface members
 addEntries([
-  { category: "Core", name: "j(source)", displayName: "j(source)" },
-  { category: "Core", name: "namedTypes", displayName: "namedTypes (j.Identifier etc)" },
-  { category: "Core", name: "builders", displayName: "builders (j.identifier() etc)" },
+  { category: "Core", name: "j(source)", displayName: "z(source)" },
+  { category: "Core", name: "namedTypes", displayName: "namedTypes (z.Identifier etc)" },
+  { category: "Core", name: "builders", displayName: "builders (z.identifier() etc)" },
 ]);
 addEntries(
   extractInterfaceAPI(resolveInterface(path.join(JSCS_TYPES, "core.d.ts"), "Core"), "Core"),
@@ -227,7 +227,7 @@ const zmodCoreAPI = new Set([
   "j(source)",
   "namedTypes",
   "builders",
-  ...extractInterfaceNames(resolveInterface(path.join(ZMOD_SRC, "jscodeshift.ts"), "JFunction")),
+  ...extractInterfaceNames(resolveInterface(path.join(ZMOD_SRC, "jscodeshift.ts"), "ZFunction")),
 ]);
 
 // Collection: merge Collection + FilteredCollection public members

@@ -1,12 +1,12 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Find createClass calls with PureRenderMixin
   root
-    .find(j.CallExpression, {
+    .find(z.CallExpression, {
       callee: {
         type: "MemberExpression",
         object: { name: "React" },
@@ -44,7 +44,7 @@ const transform: Transform = ({ source }, { j }) => {
 
       // Remove PureRenderMixin require
       root
-        .find(j.VariableDeclaration)
+        .find(z.VariableDeclaration)
         .filter((path) => {
           const decl = path.node.declarations?.[0];
           return (

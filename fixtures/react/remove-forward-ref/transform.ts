@@ -1,10 +1,10 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
 
   root
-    .find(j.CallExpression, {
+    .find(z.CallExpression, {
       callee: {
         type: "MemberExpression",
         object: { name: "React" },

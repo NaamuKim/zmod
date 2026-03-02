@@ -1,10 +1,10 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
-  root.find(j.ClassDeclaration).forEach((path) => {
+  root.find(z.ClassDeclaration).forEach((path) => {
     const sc = path.node.superClass;
     if (!sc) return;
 

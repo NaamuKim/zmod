@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "fs/promises";
 import { glob } from "tinyglobby";
-import { j, type Transform } from "./jscodeshift";
+import { z, type Transform } from "./jscodeshift";
 
 export interface RunOptions {
   /** Glob patterns to match files. */
@@ -31,7 +31,7 @@ export async function run(transform: Transform, options: RunOptions): Promise<Ru
   for (const filePath of files) {
     try {
       const source = await readFile(filePath, "utf-8");
-      const output = transform({ source, path: filePath }, { j, report: console.log });
+      const output = transform({ source, path: filePath }, { z, report: console.log });
 
       if (output != null && output !== source) {
         if (!options.dry) {

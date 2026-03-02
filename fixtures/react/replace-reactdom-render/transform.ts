@@ -1,14 +1,14 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // 1. Detect react-dom import names
   let renderNamedLocal: string | null = null;
   let reactDomDefault: string | null = null;
 
-  root.find(j.ImportDeclaration, { source: { value: "react-dom" } }).forEach((path) => {
+  root.find(z.ImportDeclaration, { source: { value: "react-dom" } }).forEach((path) => {
     for (const spec of path.node.specifiers || []) {
       if (spec.type === "ImportSpecifier" && spec.imported?.name === "render") {
         renderNamedLocal = spec.local?.name ?? null;
@@ -21,7 +21,7 @@ const transform: Transform = ({ source }, { j }) => {
 
   // 2. Find render() calls
   root
-    .find(j.CallExpression)
+    .find(z.CallExpression)
     .filter((path) => {
       const callee = path.node.callee;
       // render(...)

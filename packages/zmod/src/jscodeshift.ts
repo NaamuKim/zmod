@@ -6,19 +6,19 @@ export type { ASTNode } from "./collection";
 export { Collection, FilteredCollection, NodePath } from "./collection";
 
 /**
- * The `j` function: parse source code and return a Collection for querying/transforming.
+ * The `z` function: parse source code and return a Collection for querying/transforming.
  *
  * Usage:
- *   const root = j(source);
- *   root.find(j.CallExpression, { callee: { name: "foo" } })
+ *   const root = z(source);
+ *   root.find(z.CallExpression, { callee: { name: "foo" } })
  *       .replaceWith(path => path.node.arguments[0])
  *   return root.toSource();
  *
  * Also exposes ast-types builders and namedTypes as properties:
- *   j.identifier("foo")
- *   j.CallExpression  // type checker for find()
+ *   z.identifier("foo")
+ *   z.CallExpression  // type checker for find()
  */
-export interface JFunction {
+export interface ZFunction {
   (source: string): Collection;
 
   // Core API
@@ -27,7 +27,7 @@ export interface JFunction {
     filter: Record<string, any> | ((node: ASTNode) => boolean),
   ): boolean;
   use(plugin: (core: any) => void): void;
-  withParser(parser: any): JFunction;
+  withParser(parser: any): ZFunction;
   registerMethods(methods: Record<string, Function>, type?: any): void;
   types: typeof namedTypes;
   template: { statement: Function; statements: Function; expression: Function };
@@ -64,15 +64,15 @@ function matchesFilter(node: ASTNode, filter: Record<string, any>): boolean {
   return true;
 }
 
-function createJ(): JFunction {
-  const jFn = (source: string): Collection => {
+function createZ(): ZFunction {
+  const zFn = (source: string): Collection => {
     const program = parse(source);
     return new Collection(source, program);
   };
 
   // ── Core API ──
 
-  (jFn as any).match = (
+  (zFn as any).match = (
     pathOrNode: ASTNode | NodePath,
     filter: Record<string, any> | ((node: ASTNode) => boolean),
   ): boolean => {
@@ -84,22 +84,22 @@ function createJ(): JFunction {
     return matchesFilter(node, filter);
   };
 
-  (jFn as any).use = (_plugin: any): void => {
+  (zFn as any).use = (_plugin: any): void => {
     // Plugin system — stub for compat
   };
 
-  (jFn as any).withParser = (_parser: any): JFunction => {
+  (zFn as any).withParser = (_parser: any): ZFunction => {
     // Parser override — return self (we always use oxc)
-    return jFn as JFunction;
+    return zFn as ZFunction;
   };
 
-  (jFn as any).registerMethods = (_methods: any, _type?: any): void => {
+  (zFn as any).registerMethods = (_methods: any, _type?: any): void => {
     // Method registration — stub for compat
   };
 
-  (jFn as any).types = namedTypes;
+  (zFn as any).types = namedTypes;
 
-  (jFn as any).template = {
+  (zFn as any).template = {
     statement(strings: TemplateStringsArray, ...args: any[]) {
       const src = String.raw({ raw: strings }, ...args);
       const program = parse(src);
@@ -118,7 +118,7 @@ function createJ(): JFunction {
     },
   };
 
-  (jFn as any).filters = {
+  (zFn as any).filters = {
     JSXElement: {
       hasAttributes(filter: Record<string, any>) {
         return (path: NodePath): boolean => {
@@ -166,7 +166,7 @@ function createJ(): JFunction {
     },
   };
 
-  (jFn as any).mappings = {
+  (zFn as any).mappings = {
     JSXElement: {
       getRootName(path: NodePath): string {
         const el = path.node.openingElement?.name;
@@ -182,24 +182,24 @@ function createJ(): JFunction {
     },
   };
 
-  // Attach ast-types namedTypes (e.g., j.CallExpression, j.Identifier, etc.)
+  // Attach ast-types namedTypes (e.g., z.CallExpression, z.Identifier, etc.)
   for (const [name, type] of Object.entries(namedTypes)) {
-    (jFn as any)[name] = type;
+    (zFn as any)[name] = type;
   }
 
-  // Attach ast-types builders (e.g., j.identifier(), j.callExpression(), etc.)
+  // Attach ast-types builders (e.g., z.identifier(), z.callExpression(), etc.)
   for (const [name, builder] of Object.entries(builders)) {
-    (jFn as any)[name] = builder;
+    (zFn as any)[name] = builder;
   }
 
-  return jFn as JFunction;
+  return zFn as ZFunction;
 }
 
-export const j = createJ();
-export type JSCodeshift = typeof j;
+export const z = createZ();
+export type JSCodeshift = typeof z;
 
 export type Transform = (
   fileInfo: { source: string; path: string },
-  api: { j: JSCodeshift; report: (msg: string) => void },
+  api: { z: JSCodeshift; report: (msg: string) => void },
   options?: Record<string, unknown>,
 ) => string | null | undefined;

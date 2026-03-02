@@ -1,12 +1,12 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Find React.DOM.xxx(...) calls
   root
-    .find(j.CallExpression)
+    .find(z.CallExpression)
     .filter((path) => {
       const callee = path.node.callee;
       return (

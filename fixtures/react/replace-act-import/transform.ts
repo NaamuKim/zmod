@@ -1,11 +1,11 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Find import from "react-dom/test-utils" and change source to "react"
-  root.find(j.ImportDeclaration, { source: { value: "react-dom/test-utils" } }).forEach((path) => {
+  root.find(z.ImportDeclaration, { source: { value: "react-dom/test-utils" } }).forEach((path) => {
     // Replace the import source string (excluding quotes)
     const srcNode = path.node.source;
     root.replace(

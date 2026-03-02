@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, existsSync } from "fs";
 import { join } from "path";
-import { j } from "../src/jscodeshift";
+import { z } from "../src/jscodeshift";
 
 const fixturesRoot = join(__dirname, "../../../fixtures/react");
 
@@ -27,7 +27,7 @@ describe("jscodeshift-style fixtures", () => {
 
       const result = transform(
         { source: input, path: join(dir, "input.tsx") },
-        { j, report: console.log },
+        { z, report: console.log },
       );
 
       expect(result).toBe(expected);

@@ -9,13 +9,13 @@ const DOM_METHODS = new Set([
   "unstable_renderSubtreeIntoContainer",
 ]);
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Find React.xxx() calls where xxx is a DOM method
   root
-    .find(j.MemberExpression, {
+    .find(z.MemberExpression, {
       object: { name: "React" },
     })
     .filter((path) => DOM_METHODS.has(path.node.property?.name))
@@ -28,7 +28,7 @@ const transform: Transform = ({ source }, { j }) => {
   // Add ReactDOM require after React require
   if (isDirty) {
     root
-      .find(j.VariableDeclaration)
+      .find(z.VariableDeclaration)
       .filter((path) => {
         const decl = path.node.declarations?.[0];
         return (

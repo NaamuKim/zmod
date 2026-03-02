@@ -1,12 +1,12 @@
 import type { Transform } from "zmod";
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Replace React.PropTypes.xxx with PropTypes.xxx
   root
-    .find(j.MemberExpression, {
+    .find(z.MemberExpression, {
       object: {
         type: "MemberExpression",
         object: { name: "React" },
@@ -21,7 +21,7 @@ const transform: Transform = ({ source }, { j }) => {
 
   if (isDirty) {
     // Add PropTypes import at the top
-    root.find(j.ImportDeclaration, { source: { value: "react" } }).forEach((path) => {
+    root.find(z.ImportDeclaration, { source: { value: "react" } }).forEach((path) => {
       root._addPatch(path.node.start, path.node.start, `import PropTypes from "prop-types";\n`);
     });
   }

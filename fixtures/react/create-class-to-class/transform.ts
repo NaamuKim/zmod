@@ -2,13 +2,13 @@ import type { Transform } from "zmod";
 
 const STATIC_PROPS = new Set(["propTypes", "contextTypes", "childContextTypes", "displayName"]);
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   // Find: var X = React.createClass({...})
   root
-    .find(j.CallExpression, {
+    .find(z.CallExpression, {
       callee: {
         type: "MemberExpression",
         object: { name: "React" },

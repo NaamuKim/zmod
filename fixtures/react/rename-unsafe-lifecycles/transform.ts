@@ -6,12 +6,12 @@ const DEPRECATED_APIS: Record<string, string> = {
   componentWillUpdate: "UNSAFE_componentWillUpdate",
 };
 
-const transform: Transform = ({ source }, { j }) => {
-  const root = j(source);
+const transform: Transform = ({ source }, { z }) => {
+  const root = z(source);
   let isDirty = false;
 
   for (const [oldName, newName] of Object.entries(DEPRECATED_APIS)) {
-    root.find(j.Identifier, { name: oldName }).forEach((path) => {
+    root.find(z.Identifier, { name: oldName }).forEach((path) => {
       const parent = path.parent;
       if (!parent) return;
       const pt = parent.node.type;
