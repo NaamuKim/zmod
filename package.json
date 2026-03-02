@@ -5,6 +5,7 @@
     "packages/*",
     "fixtures/*"
   ],
+  "type": "module",
   "scripts": {
     "build": "pnpm build:napi && pnpm build:ts",
     "build:napi": "cd packages/zmod && ./node_modules/.bin/napi build --platform --release --manifest-path ../../crates/zmod-napi/Cargo.toml",

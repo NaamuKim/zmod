@@ -1,9 +1,9 @@
 import { builders, namedTypes } from "ast-types";
-import { parse } from "./oxc-parser-adapter.js";
-import { Collection, NodePath, type ASTNode } from "./collection.js";
+import { parse } from "./oxc-parser-adapter";
+import { Collection, NodePath, type ASTNode } from "./collection";
 
-export type { ASTNode } from "./collection.js";
-export { Collection, FilteredCollection, NodePath } from "./collection.js";
+export type { ASTNode } from "./collection";
+export { Collection, FilteredCollection, NodePath } from "./collection";
 
 /**
  * The `j` function: parse source code and return a Collection for querying/transforming.

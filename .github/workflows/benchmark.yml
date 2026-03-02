@@ -16,7 +16,7 @@ jobs:
       - run: pnpm install
 
       - name: Run jscodeshift compat benchmark
-        run: pnpm bench:compat --json > bench-result.json
+        run: pnpm --silent bench:compat -- --json > bench-result.json
 
       - name: Generate badge
         uses: actions/github-script@v7
@@ -36,7 +36,7 @@ jobs:
 
       - name: Generate compat badge
         run: |
-          pnpm compat --json > compat-result.json
+          pnpm --silent compat -- --json > compat-result.json
           node -e "
             const r = JSON.parse(require('fs').readFileSync('compat-result.json','utf8'));
             const pct = r.summary.percent;
