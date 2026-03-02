@@ -14,7 +14,7 @@ jobs:
       - run: pnpm install
 
       - name: Run compatibility check
-        run: pnpm compat --json > compat-result.json
+        run: pnpm --silent compat -- --json > compat-result.json
 
       - name: Add PR comment
         if: github.event_name == 'pull_request'
@@ -54,4 +54,4 @@ jobs:
         run: |
           echo "## jscodeshift API Compatibility" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          pnpm compat >> $GITHUB_STEP_SUMMARY
+          pnpm --silent compat >> $GITHUB_STEP_SUMMARY
