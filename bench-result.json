@@ -1,0 +1,59 @@
+{
+  "results": [
+    {
+      "scenario": "parse + toSource (small)",
+      "zmod_ms": 0.02,
+      "jscodeshift_ms": 0.2,
+      "speedup": 9.4
+    },
+    {
+      "scenario": "parse + toSource (medium)",
+      "zmod_ms": 0.13,
+      "jscodeshift_ms": 0.98,
+      "speedup": 7.5
+    },
+    {
+      "scenario": "parse + toSource (large)",
+      "zmod_ms": 2.57,
+      "jscodeshift_ms": 17.46,
+      "speedup": 6.8
+    },
+    {
+      "scenario": "find CallExpression (medium)",
+      "zmod_ms": 0.11,
+      "jscodeshift_ms": 0.59,
+      "speedup": 5.5
+    },
+    {
+      "scenario": "find + filter (medium)",
+      "zmod_ms": 0.11,
+      "jscodeshift_ms": 0.56,
+      "speedup": 5.1
+    },
+    {
+      "scenario": "find + replaceWith (medium)",
+      "zmod_ms": 0.11,
+      "jscodeshift_ms": 1.11,
+      "speedup": 10.2
+    },
+    {
+      "scenario": "find + remove (medium)",
+      "zmod_ms": 0.11,
+      "jscodeshift_ms": 1.1,
+      "speedup": 10.1
+    },
+    {
+      "scenario": "findJSXElements (medium)",
+      "zmod_ms": 0.13,
+      "jscodeshift_ms": 0.63,
+      "speedup": 4.9
+    },
+    {
+      "scenario": "complex transform (large)",
+      "zmod_ms": 2.64,
+      "jscodeshift_ms": 30.34,
+      "speedup": 11.5
+    }
+  ],
+  "avgSpeedup": 7.9
+}
