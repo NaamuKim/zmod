@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm build:napi && pnpm build:ts",
-    "build:napi": "cd packages/zmod && ./node_modules/.bin/napi build --platform --release --manifest-path ../../crates/zmod-napi/Cargo.toml",
+    "build:napi": "cd packages/zmod && ./node_modules/.bin/napi build --platform --release --manifest-path ../../crates/zmod-napi/Cargo.toml --output-dir .",
     "build:ts": "pnpm --filter zmod build",
     "test": "pnpm --filter './packages/*' run test",
     "benchmark": "cd benchmark && cargo bench",
