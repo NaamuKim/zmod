@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "fs/promises";
 import { glob } from "tinyglobby";
-import { z, type Transform } from "./jscodeshift";
+import { z, type Transform } from "./jscodeshift.js";
 
 export interface RunOptions {
   /** Glob patterns to match files. */

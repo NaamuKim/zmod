@@ -1,0 +1,36 @@
+{
+  "name": "@zmod/migrate",
+  "version": "0.0.0",
+  "description": "Migrate jscodeshift codemods to zmod",
+  "keywords": [
+    "codemod",
+    "jscodeshift",
+    "migration",
+    "zmod"
+  ],
+  "license": "MIT",
+  "bin": {
+    "zmod-migrate": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/cli.mjs",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "citty": "^0.2.1",
+    "execa": "^9.0.0",
+    "tinyglobby": "^0.2.12",
+    "zmod": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.1",
+    "tsdown": "^0.21.0",
+    "typescript": "^5.9.3"
+  }
+}
