@@ -4,6 +4,7 @@ export default defineConfig({
   root: "docs",
   title: "zmod",
   description: "jscodeshift-compatible codemod toolkit, 8x faster, powered by Rust",
+  base: "/zmod/",
   icon: "/favicon.svg",
   themeConfig: {
     socialLinks: [
