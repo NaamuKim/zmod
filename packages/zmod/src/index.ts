@@ -55,13 +55,22 @@ let nativeTransformCode: ((code: string, options: TransformOptions) => Transform
   null;
 
 try {
-  const require = createRequire(import.meta.url ?? __filename);
-  const platform = process.platform;
-  const arch = process.arch;
-  const suffix = platform === "linux" ? "-gnu" : "";
-  const binaryName = `zmod.${platform}-${arch}${suffix}.node`;
-  const native = require(`../${binaryName}`);
-  nativeTransformCode = native.transformCode;
+  const _require = createRequire(import.meta.url ?? __filename);
+  const _tryLoad = (name: string) => {
+    try {
+      return _require(name);
+    } catch {
+      return null;
+    }
+  };
+  const native =
+    _tryLoad("../zmod.darwin-arm64.node") ??
+    _tryLoad("../zmod.darwin-x64.node") ??
+    _tryLoad("../zmod.linux-x64-gnu.node") ??
+    _tryLoad("../zmod.linux-x64-musl.node") ??
+    _tryLoad("../zmod.linux-arm64-gnu.node") ??
+    _tryLoad("../zmod.win32-x64-msvc.node");
+  if (native) nativeTransformCode = native.transformCode;
 } catch {
   // Native binding not available, will use JS fallback
 }
