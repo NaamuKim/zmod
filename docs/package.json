@@ -1,0 +1,12 @@
+{
+  "name": "zmod-docs",
+  "private": true,
+  "scripts": {
+    "dev": "rspress dev",
+    "build": "rspress build",
+    "preview": "rspress preview"
+  },
+  "dependencies": {
+    "rspress": "^1.47.1"
+  }
+}

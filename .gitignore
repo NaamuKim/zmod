@@ -26,6 +26,8 @@ Thumbs.db
 
 # Build
 *.log
+
+docs/doc_build
 pnpm-lock.yaml
 package-lock.json
 
