@@ -3,9 +3,9 @@ import { createRequire } from "module";
 import { glob } from "tinyglobby";
 
 // jscodeshift-compatible API (oxc-powered)
-export { z, type JSCodeshift, type Transform, type ASTNode, type NodePath } from "./jscodeshift";
-export { Collection, FilteredCollection } from "./collection";
-export { run, type RunOptions, type RunResult } from "./run";
+export { z, type JSCodeshift, type Transform, type ASTNode, type NodePath } from "./jscodeshift.js";
+export { Collection, FilteredCollection } from "./collection.js";
+export { run, type RunOptions, type RunResult } from "./run.js";
 
 export interface ImportTransforms {
   /** Import source replacement: { "react-dom/test-utils": "react" } */

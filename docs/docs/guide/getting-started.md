@@ -56,4 +56,10 @@ await run(transform, { include: "src/**/*.tsx" });
 
 ## Migration from jscodeshift
 
-See the [Migration Guide](/guide/migration).
+Already have jscodeshift codemods? Migrate automatically:
+
+```bash
+npx @zmod/migrate "codemods/**/*.ts"
+```
+
+See the [Migration Guide](/guide/migration) for details.
