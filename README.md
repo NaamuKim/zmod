@@ -16,8 +16,8 @@
 
 **Blazing fast codemods with a super simple API.**
 
-[![jscodeshift compat](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/anthropics/zmod/main/.github/badges/compat.json)](./scripts/compat-check.ts)
-[![vs jscodeshift](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/anthropics/zmod/main/.github/badges/benchmark.json)](./benchmark/jscodeshift-compat.bench.ts)
+[![jscodeshift compat](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NaamuKim/zmod/main/.github/badges/compat.json)](./scripts/compat-check.ts)
+[![vs jscodeshift](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NaamuKim/zmod/main/.github/badges/benchmark.json)](./benchmark/jscodeshift-compat.bench.ts)
 
 ## Before / After
 
