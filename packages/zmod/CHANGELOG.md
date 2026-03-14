@@ -1,5 +1,19 @@
 # zmod
 
+## 0.3.1
+
+### Patch Changes
+
+- [#10](https://github.com/NaamuKim/zmod/pull/10) [`44acafa`](https://github.com/NaamuKim/zmod/commit/44acafa06981230e2cf1679f9b0c98793d560175) Thanks [@NaamuKim](https://github.com/NaamuKim)! - Add pluggable printer support via `Parser.print`
+
+  - `Parser` interface now accepts an optional `print?(node: any): string` method
+  - `z.withParser(codec)` threads the printer through to all `Collection` instances
+  - `replaceWith(astNode)` now serializes builder-created nodes via the active printer
+  - `z.print(node)` exposes the active printer for manual serialization
+  - Falls back to the internal printer when `print` is not provided (no breaking change)
+
+- [#8](https://github.com/NaamuKim/zmod/pull/8) [`fa5e131`](https://github.com/NaamuKim/zmod/commit/fa5e131b8503061f560404fcb850c7112446909f) Thanks [@NaamuKim](https://github.com/NaamuKim)! - support custom parser
+
 ## 0.3.0
 
 ### Minor Changes
