@@ -1,6 +1,10 @@
 import { readFile, writeFile } from "fs/promises";
 import { glob } from "tinyglobby";
-import { z, type Transform } from "./jscodeshift.js";
+import { z, type Transform, type JSCodeshift } from "./jscodeshift.js";
+import type { Parser } from "./parser.js";
+
+/** Transform function with an optional `parser` export (jscodeshift-compatible). */
+export type TransformModule = Transform & { parser?: Parser };
 
 export interface RunOptions {
   /** Glob patterns to match files. */
@@ -22,16 +26,18 @@ export interface RunResult {
 /**
  * Run a jscodeshift-style transform across files matching glob patterns.
  */
-export async function run(transform: Transform, options: RunOptions): Promise<RunResult> {
+export async function run(transform: TransformModule, options: RunOptions): Promise<RunResult> {
   const patterns = Array.isArray(options.include) ? options.include : [options.include];
   const files = await glob(patterns, { cwd: options.cwd });
+
+  const j: JSCodeshift = transform.parser ? z.withParser(transform.parser) : z;
 
   const results: RunResult["files"] = [];
 
   for (const filePath of files) {
     try {
       const source = await readFile(filePath, "utf-8");
-      const output = transform({ source, path: filePath }, { z, report: console.log });
+      const output = transform({ source, path: filePath }, { z: j, report: console.log });
 
       if (output != null && output !== source) {
         if (!options.dry) {

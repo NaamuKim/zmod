@@ -20,7 +20,8 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run"
   },
   "dependencies": {
     "@clack/prompts": "^1.1.0",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@types/node": "^25.2.1",
     "tsdown": "^0.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { z, NodePath } from "../src/jscodeshift";
+import { z, NodePath } from "../src/jscodeshift.js";
 
 describe("z() parse + toSource round-trip", () => {
   it("preserves source exactly when no changes are made", () => {
@@ -531,9 +531,13 @@ describe("z.match()", () => {
 });
 
 describe("z.withParser()", () => {
-  it("returns j itself", () => {
-    const j2 = z.withParser("babel");
+  it("returns a new ZFunction, not the same reference", () => {
+    const mockParser = {
+      parse: (src: string) => ({ type: "Program", body: [], start: 0, end: src.length }),
+    };
+    const j2 = z.withParser(mockParser);
     expect(typeof j2).toBe("function");
+    expect(j2).not.toBe(z);
   });
 });
 
