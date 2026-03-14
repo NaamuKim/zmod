@@ -5,7 +5,9 @@ import { glob } from "tinyglobby";
 // jscodeshift-compatible API (oxc-powered)
 export { z, type JSCodeshift, type Transform, type ASTNode, type NodePath } from "./jscodeshift.js";
 export { Collection, FilteredCollection } from "./collection.js";
-export { run, type RunOptions, type RunResult } from "./run.js";
+export { run, type RunOptions, type RunResult, type TransformModule } from "./run.js";
+export type { Parser, ParseOptions } from "./parser.js";
+export { oxcParser } from "./oxc-parser-adapter.js";
 
 export interface ImportTransforms {
   /** Import source replacement: { "react-dom/test-utils": "react" } */

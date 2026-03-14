@@ -1,5 +1,6 @@
 import { builders, namedTypes } from "ast-types";
-import { parse } from "./oxc-parser-adapter.js";
+import { oxcParser } from "./oxc-parser-adapter.js";
+import type { Parser, ParseOptions } from "./parser.js";
 import { Collection, NodePath, type ASTNode } from "./collection.js";
 
 export type { ASTNode } from "./collection.js";
@@ -19,7 +20,7 @@ export { Collection, FilteredCollection, NodePath } from "./collection.js";
  *   z.CallExpression  // type checker for find()
  */
 export interface ZFunction {
-  (source: string): Collection;
+  (source: string, options?: ParseOptions): Collection;
 
   // Core API
   match(
@@ -27,7 +28,7 @@ export interface ZFunction {
     filter: Record<string, any> | ((node: ASTNode) => boolean),
   ): boolean;
   use(plugin: (core: any) => void): void;
-  withParser(parser: any): ZFunction;
+  withParser(parser: Parser): ZFunction;
   registerMethods(methods: Record<string, Function>, type?: any): void;
   types: typeof namedTypes;
   template: { statement: Function; statements: Function; expression: Function };
@@ -64,9 +65,9 @@ function matchesFilter(node: ASTNode, filter: Record<string, any>): boolean {
   return true;
 }
 
-function createZ(): ZFunction {
-  const zFn = (source: string): Collection => {
-    const program = parse(source);
+function createZ(parser: Parser = oxcParser): ZFunction {
+  const zFn = (source: string, options?: ParseOptions): Collection => {
+    const program = parser.parse(source, options);
     return new Collection(source, program);
   };
 
@@ -88,9 +89,8 @@ function createZ(): ZFunction {
     // Plugin system — stub for compat
   };
 
-  (zFn as any).withParser = (_parser: any): ZFunction => {
-    // Parser override — return self (we always use oxc)
-    return zFn as ZFunction;
+  (zFn as any).withParser = (newParser: Parser): ZFunction => {
+    return createZ(newParser);
   };
 
   (zFn as any).registerMethods = (_methods: any, _type?: any): void => {
@@ -102,17 +102,17 @@ function createZ(): ZFunction {
   (zFn as any).template = {
     statement(strings: TemplateStringsArray, ...args: any[]) {
       const src = String.raw({ raw: strings }, ...args);
-      const program = parse(src);
+      const program = parser.parse(src);
       return program.body?.[0] ?? program;
     },
     statements(strings: TemplateStringsArray, ...args: any[]) {
       const src = String.raw({ raw: strings }, ...args);
-      const program = parse(src);
+      const program = parser.parse(src);
       return program.body ?? [];
     },
     expression(strings: TemplateStringsArray, ...args: any[]) {
       const src = String.raw({ raw: strings }, ...args);
-      const program = parse(src);
+      const program = parser.parse(src);
       const stmt = program.body?.[0];
       return stmt?.type === "ExpressionStatement" ? stmt.expression : stmt;
     },
