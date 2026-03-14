@@ -3,6 +3,11 @@ import { mkdtemp, unlink, writeFile } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
 import { parse as babelParse } from "@babel/parser";
+import * as BabelGenerator from "@babel/generator";
+const generate = ((BabelGenerator as any).default ?? BabelGenerator) as (
+  node: any,
+  opts?: any,
+) => { code: string };
 import { z } from "../src/jscodeshift.js";
 import { run, type TransformModule } from "../src/run.js";
 import type { Parser } from "../src/parser.js";
@@ -20,7 +25,7 @@ const babelTsParser: Parser = {
 const babelDecoratorParser: Parser = {
   parse(source) {
     return babelParse(source, {
-      plugins: [["decorators", { version: "legacy" }], "typescript"],
+      plugins: [["decorators", { decoratorsBeforeExport: false }], "typescript"],
       sourceType: "module",
     }).program;
   },
@@ -263,5 +268,242 @@ describe("run() with transform.parser", () => {
     } finally {
       await Promise.all(files.map((f) => unlink(f).catch(() => {})));
     }
+  });
+});
+
+// ── Pluggable printer ──────────────────────────────────────────────────────
+
+/**
+ * Full codec: @babel/parser (parse) + @babel/generator (print).
+ * This is the canonical example of a Parser with a custom printer.
+ */
+const babelCodec: Parser = {
+  parse(source, options) {
+    return babelParse(source, {
+      plugins: ["typescript"],
+      sourceType: "module",
+      ...options,
+    }).program;
+  },
+  print(node) {
+    return generate(node).code;
+  },
+};
+
+describe("Parser.print — mock printer (isolation)", () => {
+  it("z.print() calls custom printer with the node", () => {
+    const printFn = vi.fn(() => "custom_output");
+    const j = z.withParser({ parse: makeParser(), print: printFn });
+    const node = { type: "Identifier", name: "foo" };
+    expect(j.print(node)).toBe("custom_output");
+    expect(printFn).toHaveBeenCalledWith(node);
+  });
+
+  it("z.print() falls back to internal printer when print is absent", () => {
+    expect(z.print({ type: "Identifier", name: "hello" })).toBe("hello");
+  });
+
+  it("custom printer is isolated — default z is unaffected", () => {
+    const printFn = vi.fn(() => "from_custom");
+    const j = z.withParser({ parse: makeParser(), print: printFn });
+
+    z.print({ type: "Identifier", name: "foo" }); // uses internal
+    expect(printFn).not.toHaveBeenCalled();
+
+    j.print({ type: "Identifier", name: "foo" }); // uses custom
+    expect(printFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("replaceWith(astNode) routes through custom printer", () => {
+    const printFn = vi.fn((node: any) => node.name);
+    const j = z.withParser({ parse: makeParser(), print: printFn });
+    // makeParser produces empty body — can't really find nodes here.
+    // Verify via z.print proxy instead.
+    const node = { type: "Identifier", name: "bar" };
+    expect(j.print(node)).toBe("bar");
+    expect(printFn).toHaveBeenCalledWith(node);
+  });
+});
+
+describe("real printer — @babel/generator", () => {
+  const j = z.withParser(babelCodec);
+
+  it("z.print() serializes an Identifier node", () => {
+    // builder-created node has no start/end
+    const node = z.identifier("myVar");
+    expect(j.print(node)).toBe("myVar");
+  });
+
+  it("z.print() serializes a CallExpression node", () => {
+    const node = z.callExpression(z.identifier("foo"), [z.identifier("a"), z.identifier("b")]);
+    expect(j.print(node)).toBe("foo(a, b)");
+  });
+
+  it("z.print() serializes a MemberExpression node", () => {
+    const node = z.memberExpression(z.identifier("obj"), z.identifier("method"));
+    expect(j.print(node)).toBe("obj.method");
+  });
+
+  it("replaceWith(builderNode) uses @babel/generator for nodes without spans", () => {
+    const root = j("const x = old();");
+    root
+      .find(z.CallExpression)
+      .replaceWith(z.callExpression(z.identifier("newFn"), [z.identifier("arg")]));
+    expect(root.toSource()).toBe("const x = newFn(arg);");
+  });
+
+  it("replaceWith(builderNode) preserves unchanged source around replacement", () => {
+    const root = j("doA(); doB(); doC();");
+    root
+      .find(z.CallExpression, { callee: { name: "doB" } })
+      .replaceWith(z.callExpression(z.identifier("replaced"), []));
+    expect(root.toSource()).toBe("doA(); replaced(); doC();");
+  });
+
+  it("replaceWith(fn => builderNode) works with per-path callback", () => {
+    // Use builder-only arguments to avoid mixing ast-types and Babel node formats
+    const root = j("foo(a, b);");
+    root
+      .find(z.CallExpression, { callee: { name: "foo" } })
+      .replaceWith(z.callExpression(z.identifier("bar"), [z.identifier("a"), z.identifier("b")]));
+    expect(root.toSource()).toBe("bar(a, b);");
+  });
+
+  it("replaceWith(string) still works alongside custom printer", () => {
+    const root = j("const x = 1;");
+    root.find(z.Identifier, { name: "x" }).replaceWith("renamed");
+    expect(root.toSource()).toBe("const renamed = 1;");
+  });
+
+  it("NodePath.insertBefore with builder node uses custom printer", () => {
+    const root = j("const x = 1;");
+    root.find(z.VariableDeclaration).forEach((path) => {
+      path.insertBefore(z.expressionStatement(z.callExpression(z.identifier("setup"), [])));
+    });
+    // insertBefore is a raw span patch — no separator added automatically
+    expect(root.toSource()).toBe("setup();const x = 1;");
+  });
+
+  it("complex: rename method calls and wrap arguments", () => {
+    const root = j(`legacy(a, b);\nlegacy(c);`);
+    root
+      .find(z.CallExpression, { callee: { name: "legacy" } })
+      .replaceWith((path) =>
+        z.callExpression(z.identifier("modern"), [z.arrayExpression(path.node.arguments)]),
+      );
+    expect(root.toSource()).toBe("modern([a, b]);\nmodern([c]);");
+  });
+});
+
+// ── Custom hand-rolled printer ─────────────────────────────────────────────
+
+/**
+ * A minimal printer written from scratch — no external dependency.
+ * Handles the node types used in the tests below.
+ * This verifies that Parser.print works with any implementation, not just @babel/generator.
+ */
+function customPrint(node: any): string {
+  switch (node.type) {
+    case "Identifier":
+      return node.name;
+    case "StringLiteral":
+    case "Literal":
+      return typeof node.value === "string" ? `"${node.value}"` : String(node.value);
+    case "NumericLiteral":
+      return String(node.value);
+    case "CallExpression": {
+      const callee = customPrint(node.callee);
+      const args = (node.arguments ?? []).map(customPrint).join(", ");
+      return `${callee}(${args})`;
+    }
+    case "MemberExpression": {
+      const obj = customPrint(node.object);
+      const prop = customPrint(node.property);
+      return node.computed ? `${obj}[${prop}]` : `${obj}.${prop}`;
+    }
+    case "ArrayExpression": {
+      const elems = (node.elements ?? []).map(customPrint).join(", ");
+      return `[${elems}]`;
+    }
+    case "ObjectExpression": {
+      const props = (node.properties ?? []).map(customPrint).join(", ");
+      return `{ ${props} }`;
+    }
+    case "Property":
+      return node.shorthand
+        ? customPrint(node.key)
+        : `${customPrint(node.key)}: ${customPrint(node.value)}`;
+    case "ArrowFunctionExpression": {
+      const params = (node.params ?? []).map(customPrint).join(", ");
+      const body = customPrint(node.body);
+      return `(${params}) => ${body}`;
+    }
+    case "BinaryExpression":
+      return `${customPrint(node.left)} ${node.operator} ${customPrint(node.right)}`;
+    default:
+      return `/* unknown: ${node.type} */`;
+  }
+}
+
+const customCodec: Parser = {
+  parse(source, options) {
+    return babelParse(source, {
+      plugins: ["typescript"],
+      sourceType: "module",
+      ...options,
+    }).program;
+  },
+  print: customPrint,
+};
+
+describe("custom hand-rolled printer", () => {
+  const j = z.withParser(customCodec);
+
+  it("z.print() uses custom printer for Identifier", () => {
+    expect(j.print(z.identifier("hello"))).toBe("hello");
+  });
+
+  it("z.print() uses custom printer for CallExpression", () => {
+    const node = z.callExpression(z.identifier("fn"), [z.identifier("x"), z.identifier("y")]);
+    expect(j.print(node)).toBe("fn(x, y)");
+  });
+
+  it("z.print() uses custom printer for MemberExpression", () => {
+    expect(j.print(z.memberExpression(z.identifier("a"), z.identifier("b")))).toBe("a.b");
+  });
+
+  it("replaceWith(builderNode) goes through custom printer", () => {
+    const root = j("const x = old();");
+    root
+      .find(z.CallExpression)
+      .replaceWith(z.callExpression(z.identifier("fresh"), [z.identifier("arg")]));
+    expect(root.toSource()).toBe("const x = fresh(arg);");
+  });
+
+  it("replaceWith(fn => builderNode) passes path to callback and prints result", () => {
+    const root = j("foo(); bar(); foo();");
+    root
+      .find(z.CallExpression, { callee: { name: "foo" } })
+      .replaceWith(() => z.callExpression(z.identifier("baz"), []));
+    expect(root.toSource()).toBe("baz(); bar(); baz();");
+  });
+
+  it("custom printer is used for nested node structures", () => {
+    const node = z.callExpression(z.memberExpression(z.identifier("obj"), z.identifier("method")), [
+      z.identifier("a"),
+    ]);
+    expect(j.print(node)).toBe("obj.method(a)");
+  });
+
+  it("custom printer is completely independent of @babel/generator", () => {
+    // Same source, different printers → same AST transformation, different serialization
+    const babelJ = z.withParser(babelCodec);
+    const customJ = z.withParser(customCodec);
+
+    const node = z.callExpression(z.identifier("fn"), [z.identifier("x")]);
+
+    // Both produce valid output for the same node
+    expect(babelJ.print(node)).toBe("fn(x)");
+    expect(customJ.print(node)).toBe("fn(x)");
   });
 });

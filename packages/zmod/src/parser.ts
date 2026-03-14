@@ -20,4 +20,15 @@ export interface ParseOptions {
  */
 export interface Parser {
   parse(source: string, options?: ParseOptions): any;
+  /**
+   * Optional: serialize an AST node back to source code.
+   *
+   * When provided, enables:
+   * - `replaceWith(astNode)` with builder-created nodes
+   * - `z.print(node)` for manual serialization
+   *
+   * Without this, zmod falls back to its internal printer which handles
+   * common ESTree node types.
+   */
+  print?(node: any): string;
 }
