@@ -54,21 +54,9 @@ const main = defineCommand({
 
     p.intro("@zmod/migrate");
 
-    let pattern = args.pattern as string | undefined;
-    if (!pattern) {
-      const input = await p.text({
-        message: "Which files do you want to migrate?",
-        placeholder: "codemods/**/*.ts",
-        validate: (v) => (!v ? "Please enter a glob pattern" : undefined),
-      });
-      if (p.isCancel(input)) {
-        p.cancel("Cancelled.");
-        process.exit(0);
-      }
-      pattern = input;
-    }
+    const pattern = (args.pattern as string | undefined) ?? "**/*.{ts,tsx,js,jsx}";
 
-    const files = await glob([pattern], { absolute: true });
+    const files = await glob([pattern], { absolute: true, ignore: ["**/node_modules/**"] });
 
     if (files.length === 0) {
       p.outro("No files matched the pattern.");

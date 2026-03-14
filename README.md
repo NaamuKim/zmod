@@ -19,22 +19,6 @@ Start with jscodeshift compatibility. Go further with pluggable parsers, pluggab
 [![jscodeshift compat](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NaamuKim/zmod/main/.github/badges/compat.json)](./scripts/compat-check.ts)
 [![vs jscodeshift](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NaamuKim/zmod/main/.github/badges/benchmark.json)](./benchmark/jscodeshift-compat.bench.ts)
 
-## Why zmod?
-
-|                   | jscodeshift      | zmod                  |
-| ----------------- | ---------------- | --------------------- |
-| Speed             | baseline         | ~8x faster (oxc/Rust) |
-| Pluggable printer | ❌ (recast only) | ✅                    |
-| Format-preserving | ✅               | ✅ (span patching)    |
-| Migration tooling | ❌               | `@zmod/migrate`       |
-| TypeScript-first  | partial          | ✅                    |
-
-## Install
-
-```bash
-npm install zmod
-```
-
 ## Usage
 
 ### jscodeshift-compatible API
@@ -83,13 +67,19 @@ export const parser: Parser = {
 
 `run()` picks up `export const parser` automatically — same pattern as jscodeshift.
 
-### Migrate from jscodeshift
+## Install & Migrate from jscodeshift
 
 ```bash
-npx @zmod/migrate "codemods/**/*.ts"
+npm install zmod
 ```
 
-Automatically converts jscodeshift imports, renames, and string parser aliases.
+Run the migration tool from your project root — no glob needed:
+
+```bash
+npx @zmod/migrate
+```
+
+Automatically scans `**/*.{ts,tsx,js,jsx}` (excluding `node_modules`) and converts jscodeshift imports, renames, and string parser aliases.
 
 ## Benchmark
 
