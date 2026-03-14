@@ -122,7 +122,7 @@ export class NodePath {
   insertBefore(...args: any[]): void {
     if (!this._root) return;
     for (const arg of args) {
-      const text = typeof arg === "string" ? arg : printNode(arg);
+      const text = typeof arg === "string" ? arg : this._root._print(arg);
       this._root._addPatch(this.node.start, this.node.start, text);
     }
   }
@@ -130,7 +130,7 @@ export class NodePath {
   insertAfter(...args: any[]): void {
     if (!this._root) return;
     for (const arg of args) {
-      const text = typeof arg === "string" ? arg : printNode(arg);
+      const text = typeof arg === "string" ? arg : this._root._print(arg);
       this._root._addPatch(this.node.end, this.node.end, text);
     }
   }
@@ -140,7 +140,9 @@ export class NodePath {
     if (args.length === 0) {
       this._root._addPatch(this.node.start, this.node.end, "");
     } else {
-      const text = args.map((a: any) => (typeof a === "string" ? a : printNode(a))).join("");
+      const text = args
+        .map((a: any) => (typeof a === "string" ? a : this._root._print(a)))
+        .join("");
       this._root._addPatch(this.node.start, this.node.end, text);
     }
   }
@@ -215,10 +217,11 @@ function matchesFilter(node: ASTNode, filter: Record<string, any>): boolean {
 }
 
 /**
- * Serialize an AST node back to source code.
- * This is used when a node is created via builders (no original source span).
+ * Internal fallback printer: serialize an AST node back to source code.
+ * Used when no custom printer is provided via Parser.print.
+ * Exported for use in jscodeshift.ts (z.print fallback).
  */
-function printNode(node: any): string {
+export function printNode(node: any): string {
   if (!node || typeof node !== "object") return String(node ?? "");
 
   switch (node.type) {
@@ -421,12 +424,19 @@ export class Collection {
   private _program: ASTNode;
   private _paths: NodePath[];
   private _patches: Patch[];
+  private _printer: (node: any) => string;
 
-  constructor(source: string, program: ASTNode) {
+  constructor(source: string, program: ASTNode, printer?: (node: any) => string) {
     this._source = source;
     this._program = program;
     this._patches = [];
+    this._printer = printer ?? printNode;
     this._paths = buildPaths(program, null, null, null, this);
+  }
+
+  /** Serialize an AST node using the active printer (custom or internal fallback). */
+  _print(node: any): string {
+    return this._printer(node);
   }
 
   /**
@@ -547,7 +557,7 @@ export class Collection {
     ) {
       return this._source.slice(node.start, node.end);
     }
-    return printNode(node);
+    return this._print(node);
   }
 
   /**
@@ -664,16 +674,17 @@ export class FilteredCollection {
   }
 
   /**
-   * Replace each matched node with a new node or the result of a callback.
+   * Replace each matched node with a new node, string, or the result of a callback.
    * The replacement can be:
-   * - An AST node (builder-created or parsed)
-   * - A callback (path) => node
+   * - A string — used as-is (text patch)
+   * - An AST node (builder-created or parsed) — serialized via the active printer
+   * - A callback (path) => string | ASTNode
    */
-  replaceWith(replacementOrFn: ASTNode | ((path: NodePath) => ASTNode)): this {
+  replaceWith(replacementOrFn: ASTNode | string | ((path: NodePath) => ASTNode | string)): this {
     for (const path of this._paths) {
       const replacement =
         typeof replacementOrFn === "function" ? replacementOrFn(path) : replacementOrFn;
-      const text = this._nodeToSource(replacement);
+      const text = typeof replacement === "string" ? replacement : this._nodeToSource(replacement);
       this._root._addPatch(path.node.start, path.node.end, text);
     }
     return this;
@@ -894,8 +905,8 @@ export class FilteredCollection {
     ) {
       return this._root.source.slice(node.start, node.end);
     }
-    // Otherwise, print the node
-    return printNode(node);
+    // Otherwise, use the active printer (custom or internal fallback)
+    return this._root._print(node);
   }
 
   /**

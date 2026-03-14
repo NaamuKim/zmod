@@ -89,9 +89,20 @@ const root = j(source);
 
 The original `z` is unaffected — `withParser` always returns a new, isolated instance.
 
+## `z.print(node)`
+
+Serialize an AST node to source code using the active printer.
+
+```ts
+const code = z.print(z.identifier("foo")); // "foo"
+const code = z.print(z.callExpression(z.identifier("fn"), [])); // "fn()"
+```
+
+Falls back to zmod's internal printer when no custom `print` is provided via `withParser`.
+
 ## `Parser` interface
 
-Any object with a `parse` method that returns an ESTree-compatible `Program` node:
+Any object with a `parse` method that returns an ESTree-compatible `Program` node. Optionally provides a `print` method to enable AST node serialization.
 
 ```ts
 import type { Parser } from "zmod";
@@ -104,6 +115,46 @@ const myParser: Parser = {
   },
 };
 ```
+
+### `Parser.print` — pluggable printer
+
+Adding `print` to your parser enables:
+
+- **`replaceWith(astNode)`** — replace with a builder-created node instead of a string
+- **`z.print(node)`** — manually serialize any AST node
+
+```ts
+import { parse as babelParse } from "@babel/parser";
+import generate from "@babel/generator";
+import type { Parser } from "zmod";
+
+const babelCodec: Parser = {
+  parse(source, options) {
+    return babelParse(source, {
+      plugins: ["typescript"],
+      sourceType: "module",
+      ...options,
+    }).program;
+  },
+  print(node) {
+    return generate(node).code;
+  },
+};
+
+const j = z.withParser(babelCodec);
+
+// Now builder nodes work in replaceWith:
+root
+  .find(z.CallExpression, { callee: { name: "legacy" } })
+  .replaceWith((path) =>
+    z.callExpression(
+      z.memberExpression(z.identifier("api"), z.identifier("call")),
+      path.node.arguments,
+    ),
+  );
+```
+
+Without `print`, zmod falls back to its internal printer which handles common ESTree node types. The internal printer is sufficient for simple identifier/string replacements.
 
 **Requirements for custom parsers:**
 

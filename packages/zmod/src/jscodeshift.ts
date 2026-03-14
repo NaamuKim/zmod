@@ -1,7 +1,12 @@
 import { builders, namedTypes } from "ast-types";
 import { oxcParser } from "./oxc-parser-adapter.js";
 import type { Parser, ParseOptions } from "./parser.js";
-import { Collection, NodePath, type ASTNode } from "./collection.js";
+import {
+  Collection,
+  NodePath,
+  printNode as printNodeFallback,
+  type ASTNode,
+} from "./collection.js";
 
 export type { ASTNode } from "./collection.js";
 export { Collection, FilteredCollection, NodePath } from "./collection.js";
@@ -29,6 +34,7 @@ export interface ZFunction {
   ): boolean;
   use(plugin: (core: any) => void): void;
   withParser(parser: Parser): ZFunction;
+  print(node: any): string;
   registerMethods(methods: Record<string, Function>, type?: any): void;
   types: typeof namedTypes;
   template: { statement: Function; statements: Function; expression: Function };
@@ -66,9 +72,11 @@ function matchesFilter(node: ASTNode, filter: Record<string, any>): boolean {
 }
 
 function createZ(parser: Parser = oxcParser): ZFunction {
+  const printer = parser.print?.bind(parser);
+
   const zFn = (source: string, options?: ParseOptions): Collection => {
     const program = parser.parse(source, options);
-    return new Collection(source, program);
+    return new Collection(source, program, printer);
   };
 
   // ── Core API ──
@@ -91,6 +99,10 @@ function createZ(parser: Parser = oxcParser): ZFunction {
 
   (zFn as any).withParser = (newParser: Parser): ZFunction => {
     return createZ(newParser);
+  };
+
+  (zFn as any).print = (node: any): string => {
+    return printer ? printer(node) : printNodeFallback(node);
   };
 
   (zFn as any).registerMethods = (_methods: any, _type?: any): void => {
