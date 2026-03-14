@@ -3,8 +3,8 @@ pageType: home
 
 hero:
   name: zmod
-  text: Codemods, but faster.
-  tagline: 100% jscodeshift-compatible codemod toolkit powered by Rust + oxc. 8x faster, simpler API.
+  text: The next generation of jscodeshift.
+  tagline: Fast by default. Extensible by design. Pluggable parser, pluggable printer, full jscodeshift compatibility.
   actions:
     - theme: brand
       text: Get Started
@@ -14,10 +14,10 @@ hero:
       link: https://github.com/NaamuKim/zmod
 
 features:
-  - title: 100% jscodeshift Compatible
-    details: Drop-in replacement. Swap the import and your existing codemods just work.
+  - title: jscodeshift Compatible
+    details: Drop-in replacement. Swap the import and your existing codemods just work. Migrate automatically with @zmod/migrate.
   - title: 8x Faster
-    details: Powered by Rust and oxc under the hood. Benchmarked across 9 scenarios.
-  - title: Simpler API
-    details: Everything jscodeshift offers, plus a cleaner API on top.
+    details: Rust-powered oxc parsing and span-based patching — no AST re-printing, format always preserved.
+  - title: Pluggable Parser & Printer
+    details: Bring any parser and any printer. Not locked to recast or any specific implementation.
 ---
