@@ -1,4 +1,6 @@
 import { builders, namedTypes } from "ast-types";
+import type { builders as Builders } from "ast-types/lib/gen/builders";
+import type { NamedTypes } from "ast-types/lib/gen/namedTypes";
 import { oxcParser } from "./oxc-parser-adapter.js";
 import type { Parser, ParseOptions } from "./parser.js";
 import {
@@ -24,7 +26,7 @@ export { Collection, FilteredCollection, NodePath } from "./collection.js";
  *   z.identifier("foo")
  *   z.CallExpression  // type checker for find()
  */
-export interface ZFunction {
+export interface ZFunction extends NamedTypes, Builders {
   (source: string, options?: ParseOptions): Collection;
 
   // Core API
@@ -52,9 +54,6 @@ export interface ZFunction {
       getRootName(path: NodePath): string;
     };
   };
-
-  // ast-types namedTypes (for find)
-  [key: string]: any;
 }
 
 function matchesFilter(node: ASTNode, filter: Record<string, any>): boolean {
@@ -208,7 +207,7 @@ function createZ(parser: Parser = oxcParser): ZFunction {
 }
 
 export const z = createZ();
-export type JSCodeshift = typeof z;
+export type JSCodeshift = ZFunction;
 
 export type Transform = (
   fileInfo: { source: string; path: string },
