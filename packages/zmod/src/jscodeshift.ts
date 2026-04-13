@@ -207,7 +207,7 @@ function createZ(parser: Parser = oxcParser): ZFunction {
 }
 
 export const z = createZ();
-export type JSCodeshift = ZFunction;
+export type JSCodeshift = typeof z;
 
 export type Transform = (
   fileInfo: { source: string; path: string },
