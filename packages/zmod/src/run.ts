@@ -28,7 +28,7 @@ export interface RunResult {
  */
 export async function run(transform: TransformModule, options: RunOptions): Promise<RunResult> {
   const patterns = Array.isArray(options.include) ? options.include : [options.include];
-  const files = await glob(patterns, { cwd: options.cwd });
+  const files = await glob(patterns, options.cwd != null ? { cwd: options.cwd } : {});
 
   const j: JSCodeshift = transform.parser ? z.withParser(transform.parser) : z;
 
