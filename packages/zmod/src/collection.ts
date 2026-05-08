@@ -179,9 +179,10 @@ function buildPaths(
   parentKey: string | null,
   parentIndex: number | null,
   root: any,
+  result: NodePath[] = [],
 ): NodePath[] {
   const self = new NodePath(node, parent, parentKey, parentIndex, root);
-  const result: NodePath[] = [self];
+  result.push(self);
 
   for (const key of Object.keys(node)) {
     const val = node[key];
@@ -190,11 +191,11 @@ function buildPaths(
         for (let i = 0; i < val.length; i++) {
           const child = val[i];
           if (child && typeof child.type === "string") {
-            result.push(...buildPaths(child as ASTNode, self, key, i, root));
+            buildPaths(child as ASTNode, self, key, i, root, result);
           }
         }
       } else if (typeof val.type === "string") {
-        result.push(...buildPaths(val as ASTNode, self, key, null, root));
+        buildPaths(val as ASTNode, self, key, null, root, result);
       }
     }
   }
