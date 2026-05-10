@@ -1,5 +1,11 @@
 # zmod
 
+## 0.3.2
+
+### Patch Changes
+
+- [`756abb1`](https://github.com/NaamuKim/zmod/commit/756abb100558252a8bf56630865cf91ad1c9bb8e) Thanks [@NaamuKim](https://github.com/NaamuKim)! - Fix max call stack error when running codemods on large files.
+
 ## 0.3.1
 
 ### Patch Changes
