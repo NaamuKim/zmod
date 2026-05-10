@@ -1,5 +1,15 @@
 # @zmod/migrate
 
+## 0.1.2
+
+### Patch Changes
+
+- [`3329673`](https://github.com/NaamuKim/zmod/commit/33296734e51dca0982ec54cda5ba8a55e169baa7) Thanks [@NaamuKim](https://github.com/NaamuKim)! - Default to scanning all JS/TS files when no pattern is provided
+
+  - `npx @zmod/migrate` now works from the project root without arguments
+  - Defaults to `**/*.{ts,tsx,js,jsx}` with `node_modules` excluded
+  - Removes the interactive prompt for glob input
+
 ## 0.1.1
 
 ### Patch Changes
