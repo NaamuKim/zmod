@@ -4,5 +4,10 @@ export default defineConfig({
   test: {
     pool: "forks", // native bindings need forks, not worker threads (ref: Rolldown)
     testTimeout: 10000,
+    typecheck: {
+      enabled: true,
+      tsconfig: "./__tests__/tsconfig.json",
+      ignoreSourceErrors: true,
+    },
   },
 });
