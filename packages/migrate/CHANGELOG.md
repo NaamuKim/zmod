@@ -1,5 +1,12 @@
 # @zmod/migrate
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`e52ec50`](https://github.com/NaamuKim/zmod/commit/e52ec506af538adeb9e58231a824e388368ba193)]:
+  - zmod@0.4.0
+
 ## 0.1.2
 
 ### Patch Changes

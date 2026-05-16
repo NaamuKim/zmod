@@ -1,6 +1,6 @@
 {
   "name": "zmod",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Lightning-fast codemod toolkit powered by Rust and oxc",
   "keywords": [
     "ast",

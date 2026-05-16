@@ -1,5 +1,11 @@
 # zmod
 
+## 0.4.0
+
+### Minor Changes
+
+- [#11](https://github.com/NaamuKim/zmod/pull/11) [`e52ec50`](https://github.com/NaamuKim/zmod/commit/e52ec506af538adeb9e58231a824e388368ba193) Thanks [@evoactivity](https://github.com/evoactivity)! - Make types stricter and add type tests
+
 ## 0.3.2
 
 ### Patch Changes
