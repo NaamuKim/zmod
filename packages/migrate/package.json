@@ -1,6 +1,6 @@
 {
   "name": "@zmod/migrate",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Migrate jscodeshift codemods to zmod",
   "keywords": [
     "codemod",
